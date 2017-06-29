@@ -27,6 +27,7 @@
                                  j:defaultTemplate="false"
                                  j:hiddenTemplate="true"
                                  j:icon="/modules/site-settings-publication/templates/files/publishSite.png"
+                                 j:requiredPermissionNames="publish siteAdminPublication"
                                  j:titleKey="siteSettingsPublication.title"
                                  jcr:mixinTypes="jmix:rbTitle"
                                  jcr:primaryType="jnt:contentTemplate">
@@ -37,6 +38,6 @@
                     </site-settings-base>
                 </templates>
                 
-        </site-settings-publication>
+            </site-settings-publication>
     </modules>
 </content>

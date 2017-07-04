@@ -4,6 +4,16 @@
       xsi:schemaLocation="http://www.springframework.org/schema/webflow
                           http://www.springframework.org/schema/webflow/spring-webflow-2.0.xsd">
 
-    <view-state id="view"/>
+    <var name="flowHandler" class="org.jahia.modules.sitesettings.publication.webflow.SitePublicationFlowHandler"/>
+
+    <on-start>
+        <evaluate expression="flowHandler.initSitePublication(externalContext.requestMap.renderContext)" result="flowScope.sitePublication"/>
+    </on-start>
+
+    <view-state id="view" model="sitePublication">
+        <transition on="publish" to="view">
+            <evaluate expression="flowHandler.startPublication(sitePublication, externalContext.requestMap.renderContext, messageContext)"  result="flowScope.sitePublication"/>
+        </transition>
+    </view-state>
 
 </flow>

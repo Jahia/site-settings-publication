@@ -35,28 +35,29 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jcr.RepositoryException;
-import java.util.ArrayList;
+
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
  * Created by kevan
  *
- * This Job is used by Publication site settings, to execute a publication on a given path within a given language
+ * This job is used by Publication site settings to execute a publication of a given node identified by its path, in a given language.
  * In case some nodes are conflicting with live nodes or some mandatory properties are missing, the job will be aborted before starting to publish anything.
  *
- * This job need two mandatory parameters "path" and "language"
+ * This job needs two mandatory parameters "path" and "language".
  *
- * This Job assume that some basics checks have been done early:
- * - the path correspond to an existing node
- * - the path correspond to a child node of the current site
+ * This job assumes that some basics checks have been done early:
+ * - the path corresponds to an existing node
+ * - the path corresponds to a child node of the current site
  */
 public class ModulePublicationJob extends BackgroundJob {
-    
+
     public static String PUBLICATION_JOB_PATH = "path";
     public static String PUBLICATION_JOB_LANGUAGE = "language";
 
-    private static Logger logger = LoggerFactory.getLogger(PublicationJob.class);
+    private static final Logger logger = LoggerFactory.getLogger(PublicationJob.class);
 
     @Override
     public void executeJahiaJob(JobExecutionContext jobExecutionContext) throws Exception {
@@ -87,41 +88,33 @@ public class ModulePublicationJob extends BackgroundJob {
                 }
 
                 // check for conflict issues and mandatory properties
-                List<PublicationInfoNode> unpublishableInfos = new ArrayList<>();
+                List<PublicationInfoNode> unpublishableInfos = new LinkedList<>();
                 for (PublicationInfo publicationInfo : publicationInfos) {
-                    checkForUnpublishableInfos(publicationInfo.getRoot(), unpublishableInfos);
+                    populateUnpublishableInfos(publicationInfo.getRoot(), unpublishableInfos);
                 }
-                if (unpublishableInfos.size() > 0) {
-                    // TODO in future we will need to store the result of this state somewhere (list of nodes/reasons why the job have been abort), the unpublishableInfos will be the main source of informations in that case
-                    logger.warn("Module publication job have been abort due to some conflicts or missing mandatory properties");
+                if (!unpublishableInfos.isEmpty()) {
+                    // TODO in the future we will need to store the result of this state somewhere (list of nodes/reasons why the job have been abort), the unpublishableInfos will be the main source of information in that case
+                    logger.warn("Module publication job has been aborted due to conflicts or missing mandatory properties");
                     return null;
                 }
 
                 // do the publication
-                publicationService.publishByMainId(node.getIdentifier(), Constants.EDIT_WORKSPACE, Constants.LIVE_WORKSPACE, Collections.singleton(language), true, new ArrayList<String>());
+                publicationService.publishByMainId(node.getIdentifier(), Constants.EDIT_WORKSPACE, Constants.LIVE_WORKSPACE, Collections.singleton(language), true, Collections.<String>emptyList());
 
                 return null;
             }
         });
     }
 
-    private List<PublicationInfoNode> checkForUnpublishableInfos (PublicationInfoNode publicationInfoNode, List<PublicationInfoNode> unpublishableInfos) {
+    private void populateUnpublishableInfos (PublicationInfoNode publicationInfoNode, List<PublicationInfoNode> unpublishableInfos) {
         if (publicationInfoNode.getStatus() == PublicationInfo.CONFLICT || publicationInfoNode.getStatus() == PublicationInfo.MANDATORY_LANGUAGE_UNPUBLISHABLE) {
             unpublishableInfos.add(publicationInfoNode);
         }
-
-        if (publicationInfoNode.getChildren().size() > 0) {
-            for (PublicationInfoNode child : publicationInfoNode.getChildren()) {
-                checkForUnpublishableInfos(child, unpublishableInfos);
-            }
+        for (PublicationInfoNode child : publicationInfoNode.getChildren()) {
+            populateUnpublishableInfos(child, unpublishableInfos);
         }
-
-        if (publicationInfoNode.getReferences().size() > 0) {
-            for (PublicationInfo reference : publicationInfoNode.getReferences()) {
-                checkForUnpublishableInfos(reference.getRoot(), unpublishableInfos);
-            }
+        for (PublicationInfo reference : publicationInfoNode.getReferences()) {
+            populateUnpublishableInfos(reference.getRoot(), unpublishableInfos);
         }
-
-        return unpublishableInfos;
     }
 }

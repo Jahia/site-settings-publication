@@ -88,12 +88,12 @@ public class SiteAdminPublicationJob extends BackgroundJob {
                 }
 
                 // check for conflict issues and mandatory properties
-                List<PublicationInfoNode> unpublishableInfos = new LinkedList<>();
+                List<PublicationInfoNode> nonPublishableInfos = new LinkedList<>();
                 for (PublicationInfo publicationInfo : publicationInfos) {
-                    populateUnpublishableInfos(publicationInfo.getRoot(), unpublishableInfos);
+                    populateNonPublishableInfos(publicationInfo.getRoot(), nonPublishableInfos);
                 }
-                if (!unpublishableInfos.isEmpty()) {
-                    // TODO in the future we will need to store the result of this state somewhere (list of nodes/reasons why the job have been abort), the unpublishableInfos will be the main source of information in that case
+                if (!nonPublishableInfos.isEmpty()) {
+                    // TODO in the future we will need to store the result of this state somewhere (list of nodes/reasons why the job have been abort), the nonPublishableInfos will be the main source of information in that case
                     logger.warn("Site admin publication job has been aborted due to conflicts or missing mandatory properties");
                     return null;
                 }
@@ -106,15 +106,15 @@ public class SiteAdminPublicationJob extends BackgroundJob {
         });
     }
 
-    private void populateUnpublishableInfos (PublicationInfoNode publicationInfoNode, List<PublicationInfoNode> unpublishableInfos) {
+    private void populateNonPublishableInfos (PublicationInfoNode publicationInfoNode, List<PublicationInfoNode> nonPublishableInfos) {
         if (publicationInfoNode.getStatus() == PublicationInfo.CONFLICT || publicationInfoNode.getStatus() == PublicationInfo.MANDATORY_LANGUAGE_UNPUBLISHABLE) {
-            unpublishableInfos.add(publicationInfoNode);
+            nonPublishableInfos.add(publicationInfoNode);
         }
         for (PublicationInfoNode child : publicationInfoNode.getChildren()) {
-            populateUnpublishableInfos(child, unpublishableInfos);
+            populateNonPublishableInfos(child, nonPublishableInfos);
         }
         for (PublicationInfo reference : publicationInfoNode.getReferences()) {
-            populateUnpublishableInfos(reference.getRoot(), unpublishableInfos);
+            populateNonPublishableInfos(reference.getRoot(), nonPublishableInfos);
         }
     }
 }

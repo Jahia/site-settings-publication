@@ -52,7 +52,7 @@ import java.util.List;
  * - the path corresponds to an existing node
  * - the path corresponds to a child node of the current site
  */
-public class ModulePublicationJob extends BackgroundJob {
+public class SiteAdminPublicationJob extends BackgroundJob {
 
     public static String PUBLICATION_JOB_PATH = "path";
     public static String PUBLICATION_JOB_LANGUAGE = "language";
@@ -72,7 +72,7 @@ public class ModulePublicationJob extends BackgroundJob {
 
         // check data
         if (StringUtils.isEmpty(path) || StringUtils.isEmpty(language)) {
-            throw new IllegalArgumentException("Path and language are mandatory to execute the module publication job");
+            throw new IllegalArgumentException("Path and language are mandatory to execute the site admin publication job");
         }
 
         JCRTemplate.getInstance().doExecuteWithSystemSessionAsUser(null, Constants.EDIT_WORKSPACE, null, new JCRCallback<Object>() {
@@ -94,7 +94,7 @@ public class ModulePublicationJob extends BackgroundJob {
                 }
                 if (!unpublishableInfos.isEmpty()) {
                     // TODO in the future we will need to store the result of this state somewhere (list of nodes/reasons why the job have been abort), the unpublishableInfos will be the main source of information in that case
-                    logger.warn("Module publication job has been aborted due to conflicts or missing mandatory properties");
+                    logger.warn("Site admin publication job has been aborted due to conflicts or missing mandatory properties");
                     return null;
                 }
 

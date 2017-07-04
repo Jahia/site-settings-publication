@@ -106,7 +106,7 @@ public class SiteAdminPublicationJob extends BackgroundJob {
         });
     }
 
-    private void populateNonPublishableInfos (PublicationInfoNode publicationInfoNode, List<PublicationInfoNode> nonPublishableInfos) {
+    private void populateNonPublishableInfos(PublicationInfoNode publicationInfoNode, List<PublicationInfoNode> nonPublishableInfos) {
         if (publicationInfoNode.getStatus() == PublicationInfo.CONFLICT || publicationInfoNode.getStatus() == PublicationInfo.MANDATORY_LANGUAGE_UNPUBLISHABLE) {
             nonPublishableInfos.add(publicationInfoNode);
         }

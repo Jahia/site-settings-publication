@@ -36,6 +36,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.jcr.RepositoryException;
 
+import java.text.MessageFormat;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -54,6 +55,11 @@ import java.util.List;
  */
 public class SiteAdminPublicationJob extends BackgroundJob {
 
+    /**
+     * The job data variables,
+     * path: the path of the node to be published
+     * language: the language code that correspond to the local where the node should be published
+     */
     public static String PUBLICATION_JOB_PATH = "path";
     public static String PUBLICATION_JOB_LANGUAGE = "language";
 
@@ -84,6 +90,7 @@ public class SiteAdminPublicationJob extends BackgroundJob {
                 List<PublicationInfo> publicationInfos = publicationService.getPublicationInfo(node.getIdentifier(), Collections.singleton(language), true, true, true, Constants.EDIT_WORKSPACE, Constants.LIVE_WORKSPACE);
                 if (CollectionUtils.isEmpty(publicationInfos)) {
                     // nothing to publish
+                    logger.info(MessageFormat.format("Site admin publication job for path [{0}] and language [{1}] finished with nothing to publish", path, language));
                     return null;
                 }
 
@@ -94,7 +101,7 @@ public class SiteAdminPublicationJob extends BackgroundJob {
                 }
                 if (!nonPublishableInfos.isEmpty()) {
                     // TODO in the future we will need to store the result of this state somewhere (list of nodes/reasons why the job have been abort), the nonPublishableInfos will be the main source of information in that case
-                    logger.warn("Site admin publication job has been aborted due to conflicts or missing mandatory properties");
+                    logger.warn(MessageFormat.format("Site admin publication job for path [{0}] and language [{1}] has been aborted due to conflicts or missing mandatory properties", path, language));
                     return null;
                 }
 

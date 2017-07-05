@@ -33,18 +33,21 @@
 </fmt:message>
 <fmt:message var="i18nConfirmNode" key="siteSettingsPublication.confirm.node"/>
 <fmt:message var="i18nConfirmBackground" key="siteSettingsPublication.confirm.background"/>
+
 <template:addResources>
     <script type="text/javascript">
-    	function sitePublicationSubmitForm(actionType) {
+
+        function sitePublicationSubmitForm(actionType) {
             workInProgress('${functions:escapeJavaScript(i18nWaiting)}');
             $('#sitePubAction').val(actionType);
             $('#formSitePublication').submit();
-    	}
-    	function sitePublicationConfirm() {
+        }
+
+        function sitePublicationConfirm() {
             var path = $('#nodePath').val().trim();
             if ($('#scopeNode').is(':checked')) { <%-- verify the provided node path --%>
                 if (path != '${currentSitePath}' && path.match('^${currentSitePath}/') == null) {
-                    bootbox.alert({ 
+                    bootbox.alert({
                         title: '${functions:escapeJavaScript(i18nError)}',
                         message: '${functions:escapeJavaScript(i18nNodePathInvalid)}'
                     });
@@ -53,7 +56,9 @@
             }
             var msgConfirm = $('#scopeSite').is(':checked') ? '${functions:escapeJavaScript(i18nConfirmSite)}' : '${functions:escapeJavaScript(i18nConfirmNode)}'.replace('{0}', path);
             msgConfirm = msgConfirm + '<br/><ul>';
-            $('input[name="languages"]:checked').each(function(){ msgConfirm = msgConfirm + '<li>' + $(this).attr('title') + '</li>'; });
+            $('input[name="languages"]:checked').each(function() {
+                msgConfirm = msgConfirm + '<li>' + $(this).attr('title') + '</li>';
+            });
             msgConfirm = msgConfirm + '</ul>'
                          + '${functions:escapeJavaScript(i18nConfirmBackground)}';
             bootbox.confirm({
@@ -68,23 +73,29 @@
                         className: 'btn-warning btn-primary'
                     }
                 },
-                callback: function (result) {
+                callback: function(result) {
                     if (result) {
                         sitePublicationSubmitForm('publish');
                     }
                 }
             });
             return true;
-    	}
+        }
+
         $(document).ready(function() {
+
             $('#languagesAll').click(function() { <%-- handle click on the "Select all" languages checkbox --%>
                 var chkd = $(this).is(':checked');
-                $('input[name="languages"]').each(function(){ this.checked = chkd; });
+                $('input[name="languages"]').each(function() {
+                    this.checked = chkd;
+                });
                 checkPublishButtonStatus();
             });
             $('input[name="languages"]').click(function() { <%-- on click on any of language checkboxes we need to update the state of "Select all" checkbox --%>
                 if (!$(this).is(':checked')) {
-                    $('#languagesAll').each(function(){ this.checked = false; });
+                    $('#languagesAll').each(function() {
+                        this.checked = false;
+                    });
                 }
                 checkPublishButtonStatus();
             });
@@ -92,10 +103,10 @@
                 $('#nodePath').prop('disabled', $('#scopeNode').is(':checked') == false);
                 checkPublishButtonStatus();
             });
-            $('#nodePath').click(function () {
+            $('#nodePath').click(function() {
                 $(this).select();
-             });
-            
+            });
+
             function checkPublishButtonStatus() { <%-- we enable the publish button when a scope and a language (in case of multiple available languages) is selected  --%>
                 var ready = false;
                 if ($('#scopeSite').is(':checked') || $('#scopeNode').is(':checked')) {
@@ -108,25 +119,26 @@
         });
     </script>
 </template:addResources>
+
 <h2>${fn:escapeXml(i18nSitePublication)}</h2>
 <div>
     <c:if test="${not empty flowRequestContext.messageContext.allMessages}">
-    <div>
-        <c:forEach items="${flowRequestContext.messageContext.allMessages}" var="message">
-        <c:if test="${message.severity eq 'INFO'}">
-        <div class="alert alert-success">
-            <button type="button" class="close" data-dismiss="alert">&times;</button>
-                ${fn:escapeXml(message.text)}
+        <div>
+            <c:forEach items="${flowRequestContext.messageContext.allMessages}" var="message">
+                <c:if test="${message.severity eq 'INFO'}">
+                    <div class="alert alert-success">
+                        <button type="button" class="close" data-dismiss="alert">&times;</button>
+                            ${fn:escapeXml(message.text)}
+                    </div>
+                </c:if>
+                <c:if test="${message.severity eq 'ERROR'}">
+                    <div class="alert alert-error">
+                        <button type="button" class="close" data-dismiss="alert">&times;</button>
+                            ${fn:escapeXml(message.text)}
+                    </div>
+                </c:if>
+            </c:forEach>
         </div>
-        </c:if>
-        <c:if test="${message.severity eq 'ERROR'}">
-            <div class="alert alert-error">
-                <button type="button" class="close" data-dismiss="alert">&times;</button>
-                    ${fn:escapeXml(message.text)}
-            </div>
-        </c:if>
-        </c:forEach>
-    </div>
     </c:if>
     <div class="box-1">
         <fmt:message key="label.error.mandatoryField" var="i18nMandatory"/><c:set var="i18nMandatory" value="${fn:escapeXml(i18nMandatory)}"/>
@@ -181,7 +193,6 @@
                     <input type="checkbox" name="languages" value="${fn:escapeXml(lang)}" title="${fn:escapeXml(functions:displayLocaleNameWith(functions:toLocale(lang), renderContext.UILocale))}&nbsp;[${lang}]" checked="checked" style="display: none"/>
                 </c:forEach>
             </c:if>
-            
             <fieldset>
                 <div class="container-fluid">
                     <div class="row-fluid">
@@ -193,11 +204,9 @@
                         </div>
                     </div>
                 </div>
-
             </fieldset>
             <hr/>
             <p>${mandatoryLabel} - ${i18nMandatory}</p>
-
         </form>
     </div>
 </div>

@@ -12,7 +12,7 @@
 
     <view-state id="view" model="sitePublication">
         <transition on="publish" to="view">
-            <evaluate expression="flowHandler.startPublication(sitePublication, externalContext.requestMap.renderContext, messageContext)"  result="flowScope.sitePublication"/>
+            <evaluate expression="flowHandler.startPublication(sitePublication, externalContext.requestMap.renderContext, messageContext)" result="flowScope.sitePublication"/>
         </transition>
     </view-state>
 

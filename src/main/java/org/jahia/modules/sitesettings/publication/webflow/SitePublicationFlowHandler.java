@@ -76,45 +76,33 @@ import org.springframework.binding.message.MessageContext;
 /**
  * Webflow handler for the site publication panel, that aims to schedule background publication jobs for the site content in selected
  * languages.
- * 
+ *
  * @author Sergiy Shyrkov
  */
 public class SitePublicationFlowHandler implements Serializable {
 
     /**
-     * Comparator implementation that compares language display names in a certain current locale.
+     * Comparator implementation that compares language display names in a certain locale.
      */
     private static class LanguageDisplayNameComparator implements Comparator<String> {
 
         private transient Collator collator = Collator.getInstance();
-        private Locale currentLocale;
+        private Locale locale;
 
         public LanguageDisplayNameComparator(Locale locale) {
             if (locale != null) {
-                this.currentLocale = locale;
+                this.locale = locale;
                 collator = Collator.getInstance(locale);
             }
         }
 
+        @Override
         public int compare(String lang1, String lang2) {
             if (lang1.equals(lang2)) {
                 return 0;
             }
-            return collator.compare(LanguageCodeConverters.languageCodeToLocale(lang1).getDisplayName(currentLocale),
-                    LanguageCodeConverters.languageCodeToLocale(lang2).getDisplayName(currentLocale));
-        }
-
-        public boolean equals(Object obj) {
-            if (obj != null && this.getClass() == obj.getClass()) {
-                return true;
-            } else {
-                return false;
-            }
-        }
-
-        @Override
-        public int hashCode() {
-            return 0;
+            return collator.compare(LanguageCodeConverters.languageCodeToLocale(lang1).getDisplayName(locale),
+                    LanguageCodeConverters.languageCodeToLocale(lang2).getDisplayName(locale));
         }
     }
 
@@ -127,7 +115,7 @@ public class SitePublicationFlowHandler implements Serializable {
 
     /**
      * Returns a new instance of the site publication data model to be used when displaying the form.
-     * 
+     *
      * @param renderContext current DX rendering context instance
      * @return a new instance of the site publication data model to be used when displaying the form
      */
@@ -173,7 +161,7 @@ public class SitePublicationFlowHandler implements Serializable {
     /**
      * Schedules background jobs for the site publication in selected languages, preliminary performing data validation, i.e. non empty node
      * path and at least one language selected.
-     * 
+     *
      * @param sitePublication the site publication data model object
      * @param renderContext current DX rendering context instance
      * @param messages the message context instance
@@ -194,11 +182,11 @@ public class SitePublicationFlowHandler implements Serializable {
             messages.addMessage(new MessageBuilder().info().code("siteSettingsPublication.started").build());
             // we are successful, reset the model data
             return initSitePublication(renderContext);
-        } catch (RepositoryException | SchedulerException e) {
+        } catch (Exception e) {
             logger.error("An error occurred starting publication", e);
             messages.addMessage(new MessageBuilder().error().code("siteSettingsPublication.error.general")
                     .arg(e.getMessage()).build());
+            return sitePublication;
         }
-        return sitePublication;
     }
 }

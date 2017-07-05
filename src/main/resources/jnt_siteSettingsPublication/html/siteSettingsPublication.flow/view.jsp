@@ -33,6 +33,8 @@
 </fmt:message>
 <fmt:message var="i18nConfirmNode" key="siteSettingsPublication.confirm.node"/>
 <fmt:message var="i18nConfirmBackground" key="siteSettingsPublication.confirm.background"/>
+<spring:eval var="ENTIRE_SITE" expression="T(org.jahia.modules.sitesettings.publication.webflow.SitePublication$Scope).ENTIRE_SITE"/>
+<spring:eval var="SITE_SUBNODE" expression="T(org.jahia.modules.sitesettings.publication.webflow.SitePublication$Scope).SITE_SUBNODE"/>
 
 <template:addResources>
     <script type="text/javascript">
@@ -151,13 +153,13 @@
                         <div class="span6">
                             <label><fmt:message key="siteSettingsPublication.scope"/>${mandatoryLabel}</label>
                             <label for="scopeSite">
-                                <input type="radio" id="scopeSite" name="scope" value="site" ${sitePublication.scope == 'site' ? 'checked' : ''}/>&nbsp;
+                                <input type="radio" id="scopeSite" name="scope" value="${ENTIRE_SITE}" ${sitePublication.scope == ENTIRE_SITE ? 'checked' : ''}/>&nbsp;
                                 <fmt:message key="siteSettingsPublication.scope.site"/>:&nbsp;${fn:escapeXml(sitePublication.currentSiteName)}&nbsp;(${fn:escapeXml(sitePublication.currentSiteKey)})
                             </label>
                             <label for="scopeNode">
-                                <input type="radio" id="scopeNode" name="scope" value="node" ${sitePublication.scope == 'node' ? 'checked' : ''}/>&nbsp;
+                                <input type="radio" id="scopeNode" name="scope" value="${SITE_SUBNODE}" ${sitePublication.scope == SITE_SUBNODE ? 'checked' : ''}/>&nbsp;
                                 <fmt:message key="siteSettingsPublication.scope.node"/>:&nbsp;
-                                <input type="text" name="nodePath" class="span6" id="nodePath" value="${fn:escapeXml(sitePublication.nodePath)}" ${sitePublication.scope != 'node' ? 'disabled="disabled"' : ''}/>
+                                <input type="text" name="nodePath" class="span6" id="nodePath" value="${fn:escapeXml(sitePublication.nodePath)}" ${sitePublication.scope != SITE_SUBNODE ? 'disabled="disabled"' : ''}/>
                                 <br/>
                                 <span class="span3">&nbsp;</span>
                                 (<fmt:message key="siteSettingsPublication.scope.node.hint"><fmt:param value="${sitePublication.currentSiteKey}"/></fmt:message>)
@@ -197,7 +199,7 @@
                 <div class="container-fluid">
                     <div class="row-fluid">
                         <div class="span12">
-                            <button class="btn btn-primary" type="submit" id="btnSitePublicationPublish" name="_eventId_publish" onclick="sitePublicationConfirm(); return false;" ${empty sitePublication.scope || multipleSiteLanguages && empty sitePublication.languages ? 'disabled="disabled"' : ''}>
+                            <button class="btn btn-primary" type="submit" id="btnSitePublicationPublish" name="_eventId_publish" onclick="sitePublicationConfirm(); return false;" ${sitePublication.scope == null || multipleSiteLanguages && empty sitePublication.languages ? 'disabled="disabled"' : ''}>
                                 <i class="icon-ok-sign icon-white"></i>
                                 &nbsp;${fn:escapeXml(i18nPublish)}
                             </button>

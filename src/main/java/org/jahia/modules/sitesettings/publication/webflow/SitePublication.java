@@ -48,17 +48,18 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.commons.lang.StringUtils;
-import org.springframework.binding.message.MessageBuilder;
-import org.springframework.binding.message.MessageContext;
-import org.springframework.binding.validation.ValidationContext;
-
 /**
  * Model object for a site publication.
- * 
+ *
  * @author Sergiy Shyrkov
  */
 public class SitePublication implements Serializable {
+
+    public enum Scope {
+
+        ENTIRE_SITE,
+        SITE_SUBNODE
+    }
 
     private static final long serialVersionUID = -4565197823923232164L;
 
@@ -70,13 +71,13 @@ public class SitePublication implements Serializable {
 
     private String nodePath;
 
-    private String scope;
+    private Scope scope;
 
     private List<String> siteLanguages = Collections.emptyList();
 
     /**
      * Initializes an instance of this model object.
-     * 
+     *
      * @param siteKey the key of the current site
      * @param siteName the name of the current site
      */
@@ -103,7 +104,7 @@ public class SitePublication implements Serializable {
         return nodePath;
     }
 
-    public String getScope() {
+    public Scope getScope() {
         return scope;
     }
 
@@ -119,26 +120,11 @@ public class SitePublication implements Serializable {
         this.nodePath = nodePath != null ? nodePath.trim() : nodePath;
     }
 
-    public void setScope(String scope) {
+    public void setScope(Scope scope) {
         this.scope = scope;
     }
 
     public void setSiteLanguages(List<String> siteLanguages) {
         this.siteLanguages = siteLanguages;
-    }
-
-    /**
-     * Performs validation of the provided site publication configuration.
-     *
-     * @param context the current validation context object
-     */
-    public void validatePublish(ValidationContext context) {
-        MessageContext msgCtx = context.getMessageContext();
-        if (StringUtils.isEmpty(scope)) {
-            msgCtx.addMessage(new MessageBuilder().error().code("siteSettingsPublication.scope.mandatory").build());
-        }
-        if (getLanguages().size() == 0) {
-            msgCtx.addMessage(new MessageBuilder().error().code("siteSettingsPublication.languages.mandatory").build());
-        }
     }
 }

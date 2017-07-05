@@ -140,7 +140,12 @@ public class SitePublicationFlowHandler implements Serializable {
         return sitePublication;
     }
 
-    private boolean isNodePathValid(final String nodePath) throws RepositoryException {
+    private boolean isNodePathValid(final String nodePath, String sitePath) throws RepositoryException {
+
+        if (!nodePath.equals(sitePath) && !nodePath.startsWith(sitePath + "/")) {
+            return false;
+        }
+
         return JCRTemplate.getInstance().doExecuteWithSystemSession(new JCRCallback<Boolean>() {
             @Override
             public Boolean doInJCR(JCRSessionWrapper session) throws RepositoryException {
@@ -170,18 +175,30 @@ public class SitePublicationFlowHandler implements Serializable {
      */
     public SitePublication startPublication(SitePublication sitePublication, RenderContext renderContext,
             MessageContext messages) {
+
         try {
-            if ("node".equals(sitePublication.getScope()) && !isNodePathValid(sitePublication.getNodePath())) {
+
+            if (sitePublication.getScope() == null) {
+                messages.addMessage(new MessageBuilder().error().code("siteSettingsPublication.scope.mandatory").build());
+                return sitePublication;
+            }
+            if (sitePublication.getLanguages().isEmpty()) {
+                messages.addMessage(new MessageBuilder().error().code("siteSettingsPublication.languages.mandatory").build());
+                return sitePublication;
+            }
+            if (sitePublication.getScope() == SitePublication.Scope.SITE_SUBNODE && !isNodePathValid(sitePublication.getNodePath(), "/sites/" + sitePublication.getCurrentSiteKey())) {
                 messages.addMessage(
                         new MessageBuilder().error().code("siteSettingsPublication.scope.node.invalid").build());
                 return sitePublication;
             }
+
             for (String lang : sitePublication.getLanguages()) {
                 scheduleJob(sitePublication.getNodePath(), lang);
             }
             messages.addMessage(new MessageBuilder().info().code("siteSettingsPublication.started").build());
             // we are successful, reset the model data
             return initSitePublication(renderContext);
+
         } catch (Exception e) {
             logger.error("An error occurred starting publication", e);
             messages.addMessage(new MessageBuilder().error().code("siteSettingsPublication.error.general")

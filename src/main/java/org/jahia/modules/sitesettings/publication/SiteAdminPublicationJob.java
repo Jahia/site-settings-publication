@@ -36,7 +36,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.jcr.RepositoryException;
 
-import java.text.MessageFormat;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -50,17 +49,19 @@ import java.util.List;
  * This job assumes that some basics checks have been done early:
  * - the path corresponds to an existing node
  * - the path corresponds to a child node of the current site
- * 
+ *
  * @author kevan
  */
 public class SiteAdminPublicationJob extends BackgroundJob {
 
     /**
-     * The job data variables,
-     * path: the path of the node to be published
-     * language: the language code that correspond to the local where the node should be published
+     * Key of the job data containing the path of the node to be published.
      */
     public static String PUBLICATION_JOB_PATH = "path";
+
+    /**
+     * Key of the job data containing code of the language to publish the node in.
+     */
     public static String PUBLICATION_JOB_LANGUAGE = "language";
 
     private static final Logger logger = LoggerFactory.getLogger(SiteAdminPublicationJob.class);

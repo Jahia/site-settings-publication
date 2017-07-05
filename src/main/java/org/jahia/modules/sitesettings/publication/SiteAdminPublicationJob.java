@@ -90,7 +90,7 @@ public class SiteAdminPublicationJob extends BackgroundJob {
                 List<PublicationInfo> publicationInfos = publicationService.getPublicationInfo(node.getIdentifier(), Collections.singleton(language), true, true, true, Constants.EDIT_WORKSPACE, Constants.LIVE_WORKSPACE);
                 if (CollectionUtils.isEmpty(publicationInfos)) {
                     // nothing to publish
-                    logger.info(MessageFormat.format("Site admin publication job for path [{0}] and language [{1}] finished with nothing to publish", path, language));
+                    logger.info("Site admin publication job for path [{}] and language [{}] finished with nothing to publish", path, language);
                     return null;
                 }
 
@@ -101,7 +101,7 @@ public class SiteAdminPublicationJob extends BackgroundJob {
                 }
                 if (!nonPublishableInfos.isEmpty()) {
                     // TODO in the future we will need to store the result of this state somewhere (list of nodes/reasons why the job have been abort), the nonPublishableInfos will be the main source of information in that case
-                    logger.warn(MessageFormat.format("Site admin publication job for path [{0}] and language [{1}] has been aborted due to conflicts or missing mandatory properties", path, language));
+                    logger.warn("Site admin publication job for path [{}] and language [{}] has been aborted due to conflicts or missing mandatory properties", path, language);
                     return null;
                 }
 

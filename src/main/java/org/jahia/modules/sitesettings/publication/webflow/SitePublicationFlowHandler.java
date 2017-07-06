@@ -186,14 +186,18 @@ public class SitePublicationFlowHandler implements Serializable {
                 messages.addMessage(new MessageBuilder().error().code("siteSettingsPublication.languages.mandatory").build());
                 return sitePublication;
             }
-            if (sitePublication.getScope() == SitePublication.Scope.SITE_SUBNODE && !isNodePathValid(sitePublication.getNodePath(), "/sites/" + sitePublication.getCurrentSiteKey())) {
+
+            boolean isEntireSitePublication = sitePublication.getScope() == SitePublication.Scope.ENTIRE_SITE;
+            String currentSitePath = "/sites/" + sitePublication.getCurrentSiteKey();
+
+            if (!isEntireSitePublication && !isNodePathValid(sitePublication.getNodePath(), currentSitePath)) {
                 messages.addMessage(
                         new MessageBuilder().error().code("siteSettingsPublication.scope.node.invalid").build());
                 return sitePublication;
             }
 
             for (String lang : sitePublication.getLanguages()) {
-                scheduleJob(sitePublication.getNodePath(), lang);
+                scheduleJob(isEntireSitePublication ? currentSitePath : sitePublication.getNodePath(), lang);
             }
             messages.addMessage(new MessageBuilder().info().code("siteSettingsPublication.started").build());
             // we are successful, reset the model data

@@ -122,7 +122,14 @@
                                     </c:choose>
                                 </td>
                                 <td>
-                                    detail
+                                    <c:choose>
+                                        <c:when test="${jobDetail['result'] == ERROR}">
+                                            <button><fmt:message key="siteSettingsPublication.publicationJobs.showDetails"/></button>
+                                        </c:when>
+                                        <c:when test="${jobDetail['result'] == NOTHING_TO_PUBLISH}">
+                                            <fmt:message key="siteSettingsPublication.publicationJobs.contentPublished"/>
+                                        </c:when>
+                                    </c:choose>
                                 </td>
                             </tr>
                         </c:if>

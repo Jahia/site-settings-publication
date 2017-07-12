@@ -23,7 +23,6 @@
  */
 package org.jahia.modules.sitesettings.publication;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.jahia.api.Constants;
 import org.jahia.services.content.*;
@@ -36,6 +35,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.jcr.RepositoryException;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -68,6 +68,21 @@ public class SiteAdminPublicationJob extends BackgroundJob {
      * Key of the job data containing code of the language to publish the node in.
      */
     public static String PUBLICATION_JOB_LANGUAGE = "language";
+
+    /**
+     * Key of the result status of the job execution
+     */
+    public static String PUBLICATION_JOB_RESULT = "result";
+
+    /**
+     * Key of the reported conflicts path
+     */
+    public static String PUBLICATION_JOB_CONFLICTS = "conflict";
+
+    /**
+     * Key of the reported missing language path
+     */
+    public static String PUBLICATION_JOB_MISSING_PROPERTY = "missingProperty";
 
     private static final Logger logger = LoggerFactory.getLogger(SiteAdminPublicationJob.class);
 
@@ -104,19 +119,30 @@ public class SiteAdminPublicationJob extends BackgroundJob {
                 if (!nonPublishableInfos.isEmpty()) {
                     // TODO in the future we will need to store the result of this state somewhere (list of nodes/reasons why the job have been abort), the nonPublishableInfos will be the main source of information in that case
                     logger.warn("Site admin publication job for path [{}] and language [{}] has been aborted due to conflicts or missing mandatory properties", path, language);
-                    jobDataMap.put("result", ERROR);
+                    jobDataMap.put(PUBLICATION_JOB_RESULT, ERROR);
+                    List<String> conflictNodes = new ArrayList<>();
+                    List<String> missingMandatoryPropertyNodes = new ArrayList<>();
+                    for (PublicationInfoNode publicationInfo : nonPublishableInfos) {
+                        if (publicationInfo.getStatus() == PublicationInfo.CONFLICT) {
+                            conflictNodes.add(publicationInfo.getPath());
+                        } else {
+                            missingMandatoryPropertyNodes.add(publicationInfo.getPath());
+                        }
+                    }
+                    jobDataMap.put(PUBLICATION_JOB_CONFLICTS, conflictNodes);
+                    jobDataMap.put(PUBLICATION_JOB_MISSING_PROPERTY, missingMandatoryPropertyNodes);
                     return null;
                 }
                 if (!needPublication) {
                     // nothing to publish
-                    jobDataMap.put("result", NOTHING_TO_PUBLISH);
+                    jobDataMap.put(PUBLICATION_JOB_RESULT, NOTHING_TO_PUBLISH);
                     logger.info("Site admin publication job for path [{}] and language [{}] finished with nothing to publish", path, language);
                     return null;
                 }
 
                 // do the publication
                 publicationService.publishByMainId(node.getIdentifier(), Constants.EDIT_WORKSPACE, Constants.LIVE_WORKSPACE, Collections.singleton(language), true, Collections.<String>emptyList());
-                jobDataMap.put("result", SUCCESS);
+                jobDataMap.put(PUBLICATION_JOB_RESULT, SUCCESS);
                 return null;
             }
         });

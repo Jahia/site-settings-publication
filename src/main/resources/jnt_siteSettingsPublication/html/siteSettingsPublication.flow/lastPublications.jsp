@@ -89,14 +89,16 @@
             <tbody>
             <c:choose>
                 <c:when test="${totalCount > 0}">
+                    <c:set var="count" value="0"/>
                     <c:forEach items="${publicationJobs}" var="publicationJob">
                         <c:set var="jobDetail" value="${publicationJob.jobDataMap}"/>
                         <c:if test="${fn:startsWith(jobDetail['path'], renderContext.site.path)}">
                             <jsp:useBean id="dateValue" class="java.util.Date"/>
                             <jsp:setProperty name="dateValue" property="time" value="${jobDetail['begin']}"/>
+                            <fmt:formatDate value="${dateValue}" pattern="MM/dd/yyyy HH:mm:ss" var="beginDate"/>
                             <tr>
                                 <td>
-                                    <fmt:formatDate value="${dateValue}" pattern="MM/dd/yyyy HH:mm:ss"/>
+                                    ${beginDate}
                                 </td>
                                 <jsp:setProperty name="dateValue" property="time" value="${jobDetail['end']}"/>
                                 <td>
@@ -124,7 +126,49 @@
                                 <td>
                                     <c:choose>
                                         <c:when test="${jobDetail['result'] == ERROR}">
-                                            <button><fmt:message key="siteSettingsPublication.publicationJobs.showDetails"/></button>
+                                            <div id="detail${count}" class="modal hide fade">
+                                                <div class="modal-header">
+                                                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                                                    <h3><fmt:message key="siteSettingsPublication.publicationJobs.details"/></h3>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <p><fmt:message key="siteSettingsPublication.publicationJobs.publicationPath">
+                                                        <fmt:param value="<strong>${jobDetail['path']}</strong>"/>
+                                                    </fmt:message>
+                                                    </p>
+                                                    <p>
+                                                        <fmt:message key="siteSettingsPublication.publicationJobs.language"/>:
+                                                        <strong>${jobDetail['language']}</strong>
+                                                    </p>
+                                                    <p>
+                                                        <fmt:message key="siteSettingsPublication.publicationJobs.startDate"/>: <strong>${beginDate}</strong>
+                                                    </p>
+
+                                                    <c:if test="${fn:length(jobDetail['conflict']) > 0}">
+                                                        <p><fmt:message key="siteSettingsPublication.publicationJobs.conflicts"/>
+                                                        <ul>
+                                                            <c:forEach items="${jobDetail['conflict']}" var="item">
+                                                                <li>${item}</li>
+                                                            </c:forEach>
+                                                        </ul>
+                                                        </p>
+                                                    </c:if>
+                                                    <c:if test="${fn:length(jobDetail['missingProperty']) > 0}">
+                                                        <p><fmt:message key="siteSettingsPublication.publicationJobs.missingProperty"/>
+                                                        <ul>
+                                                            <c:forEach items="${jobDetail['missingProperty']}" var="item">
+                                                                <li>${item}</li>
+                                                            </c:forEach>
+                                                        </ul>
+                                                        </p>
+                                                    </c:if>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <a href="#" class="btn" data-dismiss="modal"><fmt:message key="siteSettingsPublication.publicationJobs.close"/></a>
+                                                </div>
+                                            </div>
+                                            <a href="#detail${count}" role="button" class="btn" data-toggle="modal"><fmt:message key="siteSettingsPublication.publicationJobs.showDetails"/></a>
+                                            <c:set var="count" value="${count + 1}"/>
                                         </c:when>
                                         <c:when test="${jobDetail['result'] == NOTHING_TO_PUBLISH}">
                                             <fmt:message key="siteSettingsPublication.publicationJobs.contentPublished"/>

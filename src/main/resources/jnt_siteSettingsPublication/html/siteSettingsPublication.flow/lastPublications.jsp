@@ -91,23 +91,24 @@
                 <c:when test="${totalCount > 0}">
                     <c:forEach items="${publicationJobs}" var="publicationJob">
                         <c:set var="jobDetail" value="${publicationJob.jobDataMap}"/>
-                        <jsp:useBean id="dateValue" class="java.util.Date"/>
-                        <jsp:setProperty name="dateValue" property="time" value="${jobDetail['begin']}"/>
-                        <tr>
-                            <td>
-                                <fmt:formatDate value="${dateValue}" pattern="MM/dd/yyyy HH:mm:ss"/>
-                            </td>
-                            <jsp:setProperty name="dateValue" property="time" value="${jobDetail['end']}"/>
-                            <td>
-                                <fmt:formatDate value="${dateValue}" pattern="MM/dd/yyyy HH:mm:ss"/>
-                            </td>
-                            <td>
-                                    ${jobDetail['path']}
-                            </td>
-                            <td>
-                                    ${jobDetail['language']}
-                            </td>
-                            <td>
+                        <c:if test="${fn:startsWith(jobDetail['path'], renderContext.site.path)}">
+                            <jsp:useBean id="dateValue" class="java.util.Date"/>
+                            <jsp:setProperty name="dateValue" property="time" value="${jobDetail['begin']}"/>
+                            <tr>
+                                <td>
+                                    <fmt:formatDate value="${dateValue}" pattern="MM/dd/yyyy HH:mm:ss"/>
+                                </td>
+                                <jsp:setProperty name="dateValue" property="time" value="${jobDetail['end']}"/>
+                                <td>
+                                    <fmt:formatDate value="${dateValue}" pattern="MM/dd/yyyy HH:mm:ss"/>
+                                </td>
+                                <td>
+                                        ${jobDetail['path']}
+                                </td>
+                                <td>
+                                        ${jobDetail['language']}
+                                </td>
+                                <td>
                                     <c:choose>
                                         <c:when test="${jobDetail['result'] == ERROR}">
                                             <fmt:message key="siteSettingsPublication.publicationJobs.error"/>
@@ -119,11 +120,12 @@
                                             <fmt:message key="siteSettingsPublication.publicationJobs.nothingToPublish"/>
                                         </c:when>
                                     </c:choose>
-                            </td>
-                            <td>
-                                detail
-                            </td>
-                        </tr>
+                                </td>
+                                <td>
+                                    detail
+                                </td>
+                            </tr>
+                        </c:if>
                     </c:forEach>
                 </c:when>
                 <c:otherwise>

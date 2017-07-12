@@ -123,6 +123,15 @@
 </template:addResources>
 
 <h2>${fn:escapeXml(i18nSitePublication)}</h2>
+<div class="text-right">
+    <form action="${flowExecutionUrl}" method="post" style="display: inline;">
+        <input type="hidden" name="_eventId" value="lastPublications"/>
+        <button class="btn" type="submit" name="mybutton">
+            <i class="icon-list"></i>
+            &nbsp;<fmt:message key="siteSettingsPublication.showLastPublications"/>
+        </button>
+    </form>
+</div>
 <div>
     <c:if test="${not empty flowRequestContext.messageContext.allMessages}">
         <div>

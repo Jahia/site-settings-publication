@@ -14,6 +14,12 @@
         <transition on="publish" to="view">
             <evaluate expression="flowHandler.startPublication(sitePublication, externalContext.requestMap.renderContext, messageContext)" result="flowScope.sitePublication"/>
         </transition>
+        <transition on="lastPublications" to="lastPublications">
+            <evaluate expression="flowHandler.getPublicationJobs()" result="flowScope.publicationJobs"/>
+        </transition>
+    </view-state>
+    <view-state id="lastPublications">
+        <transition on="back" to="view"/>
     </view-state>
 
 </flow>

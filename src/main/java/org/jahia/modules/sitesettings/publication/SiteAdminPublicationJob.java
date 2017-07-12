@@ -54,6 +54,11 @@ import java.util.List;
  */
 public class SiteAdminPublicationJob extends BackgroundJob {
 
+    public static int SUCCESS = 0;
+    public static int ERROR = 1;
+    public static int NOTHING_TO_PUBLISH = 2;
+
+
     /**
      * Key of the job data containing the path of the node to be published.
      */
@@ -73,7 +78,7 @@ public class SiteAdminPublicationJob extends BackgroundJob {
 
         // get job data
         JobDetail jobDetail = jobExecutionContext.getJobDetail();
-        JobDataMap jobDataMap = jobDetail.getJobDataMap();
+        final JobDataMap jobDataMap = jobDetail.getJobDataMap();
         final String path = (String) jobDataMap.get(PUBLICATION_JOB_PATH);
         final String language = (String) jobDataMap.get(PUBLICATION_JOB_LANGUAGE);
 
@@ -89,40 +94,46 @@ public class SiteAdminPublicationJob extends BackgroundJob {
 
                 JCRNodeWrapper node = session.getNode(path);
                 List<PublicationInfo> publicationInfos = publicationService.getPublicationInfo(node.getIdentifier(), Collections.singleton(language), true, true, true, Constants.EDIT_WORKSPACE, Constants.LIVE_WORKSPACE);
-                if (CollectionUtils.isEmpty(publicationInfos)) {
-                    // nothing to publish
-                    logger.info("Site admin publication job for path [{}] and language [{}] finished with nothing to publish", path, language);
-                    return null;
-                }
 
                 // check for conflict issues and mandatory properties
                 List<PublicationInfoNode> nonPublishableInfos = new LinkedList<>();
+                boolean needPublication = false;
                 for (PublicationInfo publicationInfo : publicationInfos) {
-                    populateNonPublishableInfos(publicationInfo.getRoot(), nonPublishableInfos);
+                    needPublication |= populateNonPublishableInfos(publicationInfo.getRoot(), nonPublishableInfos);
                 }
                 if (!nonPublishableInfos.isEmpty()) {
                     // TODO in the future we will need to store the result of this state somewhere (list of nodes/reasons why the job have been abort), the nonPublishableInfos will be the main source of information in that case
                     logger.warn("Site admin publication job for path [{}] and language [{}] has been aborted due to conflicts or missing mandatory properties", path, language);
+                    jobDataMap.put("result", ERROR);
+                    return null;
+                }
+                if (!needPublication) {
+                    // nothing to publish
+                    jobDataMap.put("result", NOTHING_TO_PUBLISH);
+                    logger.info("Site admin publication job for path [{}] and language [{}] finished with nothing to publish", path, language);
                     return null;
                 }
 
                 // do the publication
                 publicationService.publishByMainId(node.getIdentifier(), Constants.EDIT_WORKSPACE, Constants.LIVE_WORKSPACE, Collections.singleton(language), true, Collections.<String>emptyList());
-
+                jobDataMap.put("result", SUCCESS);
                 return null;
             }
         });
     }
 
-    private void populateNonPublishableInfos(PublicationInfoNode publicationInfoNode, List<PublicationInfoNode> nonPublishableInfos) {
+    private boolean populateNonPublishableInfos(PublicationInfoNode publicationInfoNode, List<PublicationInfoNode> nonPublishableInfos) {
+        // Do a publication only if the content status is different than published
+        boolean needPublication = publicationInfoNode.getStatus() != PublicationInfo.PUBLISHED;
         if (publicationInfoNode.getStatus() == PublicationInfo.CONFLICT || publicationInfoNode.getStatus() == PublicationInfo.MANDATORY_LANGUAGE_UNPUBLISHABLE) {
             nonPublishableInfos.add(publicationInfoNode);
         }
         for (PublicationInfoNode child : publicationInfoNode.getChildren()) {
-            populateNonPublishableInfos(child, nonPublishableInfos);
+            needPublication |= populateNonPublishableInfos(child, nonPublishableInfos);
         }
         for (PublicationInfo reference : publicationInfoNode.getReferences()) {
-            populateNonPublishableInfos(reference.getRoot(), nonPublishableInfos);
+            needPublication |= populateNonPublishableInfos(reference.getRoot(), nonPublishableInfos);
         }
+        return needPublication;
     }
 }

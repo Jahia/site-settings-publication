@@ -210,4 +210,8 @@ public class SitePublicationFlowHandler implements Serializable {
             return sitePublication;
         }
     }
+
+    public List<JobDetail> getPublicationJobs() throws SchedulerException {
+        return schedulerService.getAllJobs(BackgroundJob.getGroupName(SiteAdminPublicationJob.class));
+    }
 }

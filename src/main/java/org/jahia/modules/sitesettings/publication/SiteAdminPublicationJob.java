@@ -26,7 +26,15 @@ package org.jahia.modules.sitesettings.publication;
 import org.apache.commons.lang.StringUtils;
 import org.jahia.api.Constants;
 import org.jahia.services.content.*;
+import org.jahia.services.content.decorator.JCRUserNode;
+import org.jahia.services.mail.MailService;
+import org.jahia.services.mail.MailServiceImpl;
+import org.jahia.services.preferences.user.UserPreferencesHelper;
 import org.jahia.services.scheduler.BackgroundJob;
+import org.jahia.services.usermanager.JahiaUserManagerService;
+import org.jahia.settings.SettingsBean;
+import org.jahia.utils.i18n.Messages;
+import org.jahia.utils.i18n.ResourceBundles;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
@@ -34,11 +42,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jcr.RepositoryException;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
+import javax.script.ScriptException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 /**
  * This job is used by Publication site settings to execute a publication of a given node identified by its path, in a given language.
@@ -54,9 +61,9 @@ import java.util.List;
  */
 public class SiteAdminPublicationJob extends BackgroundJob {
 
-    public static int SUCCESS = 0;
-    public static int ERROR = 1;
-    public static int NOTHING_TO_PUBLISH = 2;
+    public static final int SUCCESS = 0;
+    public static final int ERROR = 1;
+    public static final int NOTHING_TO_PUBLISH = 2;
 
 
     /**
@@ -80,11 +87,25 @@ public class SiteAdminPublicationJob extends BackgroundJob {
     public static String PUBLICATION_JOB_CONFLICTS = "conflict";
 
     /**
-     * Key of the reported missing language path
+     * Key of the reported missing properties path
      */
     public static String PUBLICATION_JOB_MISSING_PROPERTY = "missingProperty";
 
+    /**
+     * Key for the mail template
+     */
+    public static String MAIL_TEMPLATE = "mailTemplate";
+
+    /**
+     * Key for UI Locale
+     */
+    public static String UI_LOCALE = "uiLocale";
+
+
     private static final Logger logger = LoggerFactory.getLogger(SiteAdminPublicationJob.class);
+
+    private static final SimpleDateFormat dateFormat = new SimpleDateFormat("MM-dd-yyyy HH:mm:ss");
+
 
     @Override
     public void executeJahiaJob(JobExecutionContext jobExecutionContext) throws Exception {
@@ -131,21 +152,72 @@ public class SiteAdminPublicationJob extends BackgroundJob {
                     }
                     jobDataMap.put(PUBLICATION_JOB_CONFLICTS, conflictNodes);
                     jobDataMap.put(PUBLICATION_JOB_MISSING_PROPERTY, missingMandatoryPropertyNodes);
-                    return null;
-                }
-                if (!needPublication) {
+                } else if (!needPublication) {
                     // nothing to publish
                     jobDataMap.put(PUBLICATION_JOB_RESULT, NOTHING_TO_PUBLISH);
                     logger.info("Site admin publication job for path [{}] and language [{}] finished with nothing to publish", path, language);
-                    return null;
+                } else {
+                    // do the publication
+                    publicationService.publishByMainId(node.getIdentifier(), Constants.EDIT_WORKSPACE, Constants.LIVE_WORKSPACE, Collections.singleton(language), true, Collections.<String>emptyList());
+                    jobDataMap.put(PUBLICATION_JOB_RESULT, SUCCESS);
                 }
-
-                // do the publication
-                publicationService.publishByMainId(node.getIdentifier(), Constants.EDIT_WORKSPACE, Constants.LIVE_WORKSPACE, Collections.singleton(language), true, Collections.<String>emptyList());
-                jobDataMap.put(PUBLICATION_JOB_RESULT, SUCCESS);
+                sendMail(jobDataMap);
                 return null;
             }
         });
+    }
+
+    private void sendMail(JobDataMap jobDataMap) {
+        MailService mailService = MailServiceImpl.getInstance();
+        if (mailService.isEnabled()) {
+            // get user mail informations
+            JahiaUserManagerService userManagerService = JahiaUserManagerService.getInstance();
+            JCRUserNode user = userManagerService.lookupUserByPath((String) jobDataMap.get(BackgroundJob.JOB_USERKEY));
+            String mailTo = UserPreferencesHelper.getEmailAddress(user);
+            if (StringUtils.isNotEmpty(mailTo)) {
+                Locale currentLocale = (Locale) jobDataMap.get(UI_LOCALE);
+                // Build subject
+                ResourceBundle resourceBundle = ResourceBundles.get("resources.SiteSettings-Publication", currentLocale);
+                String subjectKey = "siteSettingsPublication.publicationJobs.notification.subject.";
+                switch ((Integer) jobDataMap.get(PUBLICATION_JOB_RESULT)) {
+                    case ERROR:
+                        subjectKey += "error";
+                        break;
+                    case NOTHING_TO_PUBLISH:
+                        subjectKey += "nothingToPublish";
+                        break;
+                    default:
+                        subjectKey += "success";
+                        break;
+                }
+                // Fill bindings with custom job detail infos.
+                Map<String, Object> bindings = new HashMap<>();
+                bindings.put("conflictSize", jobDataMap.get(PUBLICATION_JOB_CONFLICTS) != null ? ((List) jobDataMap.get(PUBLICATION_JOB_CONFLICTS)).size() : 0);
+                bindings.put("missingPropertySize", jobDataMap.get(PUBLICATION_JOB_MISSING_PROPERTY) != null ? ((List) jobDataMap.get
+                        (PUBLICATION_JOB_MISSING_PROPERTY)).size() : 0);
+
+                bindings.put("beginDate", dateFormat.format(new Date(Long.parseLong((String) jobDataMap.get(BackgroundJob.JOB_BEGIN)))));
+
+                String jobEnd = (String) jobDataMap.get(BackgroundJob.JOB_END);
+                if (StringUtils.isNotEmpty(jobEnd)) {
+                    bindings.put("endDate", dateFormat.format(new Date(Long.parseLong(jobEnd))));
+                }
+
+                bindings.put("subject", Messages.getWithArgs(resourceBundle, subjectKey, jobDataMap.get(PUBLICATION_JOB_PATH), jobDataMap.get(PUBLICATION_JOB_LANGUAGE)));
+
+                bindings.putAll(jobDataMap);
+                try {
+                    mailService.sendMessageWithTemplate((String) jobDataMap.get(MAIL_TEMPLATE), bindings, mailTo, mailService.getSettings().getFrom(), null, null, currentLocale, "Site Settings - Publication");
+                } catch (RepositoryException | ScriptException e) {
+                    logger.error("Unable to send notification mail to {} because {}", mailTo, e.getMessage());
+                    logger.debug("due to error", e);
+                }
+            } else {
+                logger.debug("Unable to send mail for user [{}] because the mail information is not set", user.getUserKey());
+            }
+        } else {
+            logger.debug("Mail service not configured");
+        }
     }
 
     private boolean populateNonPublishableInfos(PublicationInfoNode publicationInfoNode, List<PublicationInfoNode> nonPublishableInfos) {

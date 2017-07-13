@@ -56,6 +56,7 @@ import java.util.Set;
 import javax.jcr.RepositoryException;
 
 import org.jahia.modules.sitesettings.publication.SiteAdminPublicationJob;
+import org.jahia.modules.sitesettings.publication.service.MailTemplateLocationService;
 import org.jahia.services.content.JCRCallback;
 import org.jahia.services.content.JCRSessionWrapper;
 import org.jahia.services.content.JCRTemplate;
@@ -113,6 +114,9 @@ public class SitePublicationFlowHandler implements Serializable {
     @Autowired
     private transient SchedulerService schedulerService;
 
+    @Autowired
+    private transient MailTemplateLocationService mailTemplateLocationService;
+
     /**
      * Returns a new instance of the site publication data model to be used when displaying the form.
      *
@@ -154,12 +158,14 @@ public class SitePublicationFlowHandler implements Serializable {
         });
     }
 
-    private void scheduleJob(String nodePath, String lang) throws SchedulerException {
+    private void scheduleJob(String nodePath, String lang, Locale uiLocale) throws SchedulerException {
         logger.info("Schedulling publication job for node {} in language {}", nodePath, lang);
         JobDetail jobDetail = BackgroundJob.createJahiaJob("Publication", SiteAdminPublicationJob.class);
         JobDataMap jobDataMap = jobDetail.getJobDataMap();
         jobDataMap.put(SiteAdminPublicationJob.PUBLICATION_JOB_PATH, nodePath);
         jobDataMap.put(SiteAdminPublicationJob.PUBLICATION_JOB_LANGUAGE, lang);
+        jobDataMap.put(SiteAdminPublicationJob.MAIL_TEMPLATE, mailTemplateLocationService.getMailTemplateLocation());
+        jobDataMap.put(SiteAdminPublicationJob.UI_LOCALE, uiLocale);
         schedulerService.scheduleJobNow(jobDetail);
     }
 
@@ -197,7 +203,7 @@ public class SitePublicationFlowHandler implements Serializable {
             }
 
             for (String lang : sitePublication.getLanguages()) {
-                scheduleJob(isEntireSitePublication ? currentSitePath : sitePublication.getNodePath(), lang);
+                scheduleJob(isEntireSitePublication ? currentSitePath : sitePublication.getNodePath(), lang, renderContext.getUILocale());
             }
             messages.addMessage(new MessageBuilder().info().code("siteSettingsPublication.started").build());
             // we are successful, reset the model data
@@ -207,6 +213,9 @@ public class SitePublicationFlowHandler implements Serializable {
             logger.error("An error occurred starting publication", e);
             messages.addMessage(new MessageBuilder().error().code("siteSettingsPublication.error.general")
                     .arg(e.getMessage()).build());
+            if (logger.isDebugEnabled()) {
+                logger.debug("Unable to publish", e);
+            }
             return sitePublication;
         }
     }

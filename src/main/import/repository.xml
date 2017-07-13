@@ -22,7 +22,9 @@
                         </publishSite.png>
                     </files>
                     <contents jcr:primaryType="jnt:contentFolder"/>
-                    <site-settings-base j:view="siteSettings" jcr:primaryType="jnt:template">
+                    <site-settings-base j:view="siteSettings"
+                                        jcr:primaryType="jnt:template"
+                                        jcr:mixinTypes="jmix:useUILocale">
                         <site-publication j:applyOn="jnt:virtualsite"
                                  j:defaultTemplate="false"
                                  j:hiddenTemplate="true"

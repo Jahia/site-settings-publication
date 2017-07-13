@@ -1,0 +1,33 @@
+Bonjour,
+<p>
+    La publication de $path en $language lancée le $beginDate
+#if ( $result == 1)
+    n’a pas été exécutée.
+#elseif ( $result == 2)
+    n’a pas été exécutée car tous les contenus étaient déjà publiés.
+#else
+    s’est terminée avec succès le $endDate.
+#end
+</p>
+<p>
+#if( $conflictSize > 0 )
+    Ses contenus en ligne existent déjà avec le même chemin que les noeuds suivants :
+<ul>
+    #foreach ($entry in $conflict)
+        <li>- $entry</li>
+    #end
+    </ul>
+#end
+</p>
+<p>
+#if( $missingPropertySize > 0 )
+    Des propriétés obligatoires manquent pour les contenus suivants :
+    <ul>
+    #foreach ($entry in $missingProperty)
+        <li>- $entry</li>
+    #end
+    </ul>
+#end
+</p>
+
+Merci

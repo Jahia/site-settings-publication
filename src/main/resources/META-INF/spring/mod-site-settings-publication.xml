@@ -4,4 +4,9 @@
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
 
     <bean id="messageSource" class="org.jahia.utils.i18n.ModuleMessageSource"/>
+
+    <bean id="mailTemplateLocationService" class="org.jahia.modules.sitesettings.publication.service.MailTemplateLocationService">
+        <property name="mailTemplateLocation" value="${siteSettingsPublication.mail.template:META-INF/mail/notification.vm}"/>
+    </bean>
+
 </beans>

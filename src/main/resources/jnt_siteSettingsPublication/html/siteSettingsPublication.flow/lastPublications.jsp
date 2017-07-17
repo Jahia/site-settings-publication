@@ -56,7 +56,7 @@
         <form action="${flowExecutionUrl}" method="post" style="display: inline;">
             <input type="hidden" name="_eventId" value="back"/>
             <button class="btn" type="submit" name="mybutton">
-                <i class="icon-back"></i>
+                <i class="icon-arrow-left"></i>
                 &nbsp;<fmt:message key="siteSettingsPublication.publicationJobs.back"/>
             </button>
         </form>

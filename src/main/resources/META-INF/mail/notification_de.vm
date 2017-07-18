@@ -1,0 +1,32 @@
+Hallo,
+die Veröffentlichung von $path in $language gestartet am $beginDate
+#if ( $result == 1)
+wurde nicht durchgeführt, weil
+#elseif ( $result == 2)
+wurde nicht durchgeführt, weil bereits alle Inhalte veröffentlicht sind.
+#else
+wurde erfolgreich beendet am $endDate.\n
+#end
+</p>
+<p>
+#if( $conflictSize > 0 )
+    die folgenden Inhalte haben die selben Pfade wie die folgenden Inhalte, welche bereits in live existieren:
+<ul>
+    #foreach ($entry in $conflict)
+        <li>- $entry</li>
+    #end
+</ul>
+#end
+</p>
+<p>
+#if( $missingPropertySize > 0 )
+    die folgenden Inhalte haben fehlende verpflichtend anzugebende Eigenschaften:
+<ul>
+    #foreach ($entry in $missingProperty)
+        <li>- $entry</li>
+    #end
+</ul>
+#end
+</p>
+
+Vielen Dank.

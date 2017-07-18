@@ -32,7 +32,6 @@ import org.jahia.services.mail.MailServiceImpl;
 import org.jahia.services.preferences.user.UserPreferencesHelper;
 import org.jahia.services.scheduler.BackgroundJob;
 import org.jahia.services.usermanager.JahiaUserManagerService;
-import org.jahia.settings.SettingsBean;
 import org.jahia.utils.i18n.Messages;
 import org.jahia.utils.i18n.ResourceBundles;
 import org.quartz.JobDataMap;
@@ -43,7 +42,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.jcr.RepositoryException;
 import javax.script.ScriptException;
-import java.text.DateFormat;
+
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -64,7 +63,6 @@ public class SiteAdminPublicationJob extends BackgroundJob {
     public static final int SUCCESS = 0;
     public static final int ERROR = 1;
     public static final int NOTHING_TO_PUBLISH = 2;
-
 
     /**
      * Key of the job data containing the path of the node to be published.
@@ -101,11 +99,8 @@ public class SiteAdminPublicationJob extends BackgroundJob {
      */
     public static String UI_LOCALE = "uiLocale";
 
-
     private static final Logger logger = LoggerFactory.getLogger(SiteAdminPublicationJob.class);
-
-    private static final SimpleDateFormat dateFormat = new SimpleDateFormat("MM-dd-yyyy HH:mm:ss");
-
+    private static final SimpleDateFormat notificationDateTimeFormat = new SimpleDateFormat("MM-dd-yyyy HH:mm:ss");
 
     @Override
     public void executeJahiaJob(JobExecutionContext jobExecutionContext) throws Exception {
@@ -138,7 +133,6 @@ public class SiteAdminPublicationJob extends BackgroundJob {
                     needPublication |= populateNonPublishableInfos(publicationInfo.getRoot(), nonPublishableInfos);
                 }
                 if (!nonPublishableInfos.isEmpty()) {
-                    // TODO in the future we will need to store the result of this state somewhere (list of nodes/reasons why the job have been abort), the nonPublishableInfos will be the main source of information in that case
                     logger.warn("Site admin publication job for path [{}] and language [{}] has been aborted due to conflicts or missing mandatory properties", path, language);
                     jobDataMap.put(PUBLICATION_JOB_RESULT, ERROR);
                     List<String> conflictNodes = new ArrayList<>();
@@ -154,8 +148,8 @@ public class SiteAdminPublicationJob extends BackgroundJob {
                     jobDataMap.put(PUBLICATION_JOB_MISSING_PROPERTY, missingMandatoryPropertyNodes);
                 } else if (!needPublication) {
                     // nothing to publish
-                    jobDataMap.put(PUBLICATION_JOB_RESULT, NOTHING_TO_PUBLISH);
                     logger.info("Site admin publication job for path [{}] and language [{}] finished with nothing to publish", path, language);
+                    jobDataMap.put(PUBLICATION_JOB_RESULT, NOTHING_TO_PUBLISH);
                 } else {
                     // do the publication
                     publicationService.publishByMainId(node.getIdentifier(), Constants.EDIT_WORKSPACE, Constants.LIVE_WORKSPACE, Collections.singleton(language), true, Collections.<String>emptyList());
@@ -167,6 +161,7 @@ public class SiteAdminPublicationJob extends BackgroundJob {
         });
     }
 
+    @SuppressWarnings("unchecked")
     private void sendMail(JobDataMap jobDataMap) {
         MailService mailService = MailServiceImpl.getInstance();
         if (mailService.isEnabled()) {
@@ -192,19 +187,15 @@ public class SiteAdminPublicationJob extends BackgroundJob {
                 }
                 // Fill bindings with custom job detail infos.
                 Map<String, Object> bindings = new HashMap<>();
-                bindings.put("conflictSize", jobDataMap.get(PUBLICATION_JOB_CONFLICTS) != null ? ((List) jobDataMap.get(PUBLICATION_JOB_CONFLICTS)).size() : 0);
-                bindings.put("missingPropertySize", jobDataMap.get(PUBLICATION_JOB_MISSING_PROPERTY) != null ? ((List) jobDataMap.get
+                bindings.put("conflictSize", jobDataMap.get(PUBLICATION_JOB_CONFLICTS) != null ? ((List<?>) jobDataMap.get(PUBLICATION_JOB_CONFLICTS)).size() : 0);
+                bindings.put("missingPropertySize", jobDataMap.get(PUBLICATION_JOB_MISSING_PROPERTY) != null ? ((List<?>) jobDataMap.get
                         (PUBLICATION_JOB_MISSING_PROPERTY)).size() : 0);
-
-                bindings.put("beginDate", dateFormat.format(new Date(Long.parseLong((String) jobDataMap.get(BackgroundJob.JOB_BEGIN)))));
-
+                bindings.put("beginDate", notificationDateTimeFormat.format(new Date(Long.parseLong((String) jobDataMap.get(BackgroundJob.JOB_BEGIN)))));
                 String jobEnd = (String) jobDataMap.get(BackgroundJob.JOB_END);
                 if (StringUtils.isNotEmpty(jobEnd)) {
-                    bindings.put("endDate", dateFormat.format(new Date(Long.parseLong(jobEnd))));
+                    bindings.put("endDate", notificationDateTimeFormat.format(new Date(Long.parseLong(jobEnd))));
                 }
-
                 bindings.put("subject", Messages.getWithArgs(resourceBundle, subjectKey, jobDataMap.get(PUBLICATION_JOB_PATH), jobDataMap.get(PUBLICATION_JOB_LANGUAGE)));
-
                 bindings.putAll(jobDataMap);
                 try {
                     mailService.sendMessageWithTemplate((String) jobDataMap.get(MAIL_TEMPLATE), bindings, mailTo, mailService.getSettings().getFrom(), null, null, currentLocale, "Site Settings - Publication");

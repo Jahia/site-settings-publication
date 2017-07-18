@@ -213,9 +213,6 @@ public class SitePublicationFlowHandler implements Serializable {
             logger.error("An error occurred starting publication", e);
             messages.addMessage(new MessageBuilder().error().code("siteSettingsPublication.error.general")
                     .arg(e.getMessage()).build());
-            if (logger.isDebugEnabled()) {
-                logger.debug("Unable to publish", e);
-            }
             return sitePublication;
         }
     }

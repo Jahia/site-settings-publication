@@ -6,40 +6,40 @@
                                  j:moduleType="module"
                                  j:title="Site Settings - Publication"
                                  jcr:primaryType="jnt:module">
-                
-                <portlets jcr:primaryType="jnt:portletFolder"/>
-                <files jcr:primaryType="jnt:folder"/>
+
+            <portlets jcr:primaryType="jnt:portletFolder"/>
+            <files jcr:primaryType="jnt:folder"/>
+            <contents jcr:primaryType="jnt:contentFolder"/>
+            <templates j:rootTemplatePath="/base" jcr:primaryType="jnt:templatesFolder">
+                <files jcr:primaryType="jnt:folder">
+                    <publishSite.png j:height="16"
+                            j:width="16"
+                            jcr:mixinTypes="jmix:image"
+                            jcr:primaryType="jnt:file">
+                        <jcr:content jcr:mimeType="image/png" jcr:primaryType="jnt:resource"/>
+                        <thumbnail jcr:mimeType="image/png" jcr:primaryType="jnt:resource"/>
+                        <thumbnail2 jcr:mimeType="image/png" jcr:primaryType="jnt:resource"/>
+                    </publishSite.png>
+                </files>
                 <contents jcr:primaryType="jnt:contentFolder"/>
-                <templates j:rootTemplatePath="/base" jcr:primaryType="jnt:templatesFolder">
-                    <files jcr:primaryType="jnt:folder">
-                        <publishSite.png j:height="16"
-                                j:width="16"
-                                jcr:mixinTypes="jmix:image"
-                                jcr:primaryType="jnt:file">
-                            <jcr:content jcr:mimeType="image/png" jcr:primaryType="jnt:resource"/>
-                            <thumbnail jcr:mimeType="image/png" jcr:primaryType="jnt:resource"/>
-                            <thumbnail2 jcr:mimeType="image/png" jcr:primaryType="jnt:resource"/>
-                        </publishSite.png>
-                    </files>
-                    <contents jcr:primaryType="jnt:contentFolder"/>
-                    <site-settings-base j:view="siteSettings"
-                                        jcr:primaryType="jnt:template"
-                                        jcr:mixinTypes="jmix:useUILocale">
-                        <site-publication j:applyOn="jnt:virtualsite"
-                                 j:defaultTemplate="false"
-                                 j:hiddenTemplate="true"
-                                 j:icon="/modules/site-settings-publication/templates/files/publishSite.png"
-                                 j:requiredPermissionNames="publish siteAdminPublication"
-                                 j:titleKey="siteSettingsPublication.title"
-                                 jcr:mixinTypes="jmix:rbTitle"
-                                 jcr:primaryType="jnt:contentTemplate">
-                            <pagecontent jcr:primaryType="jnt:contentList">
-                                <site-publication-panel jcr:primaryType="jnt:siteSettingsPublication"/>
-                            </pagecontent>
-                        </site-publication>
-                    </site-settings-base>
-                </templates>
-                
-            </site-settings-publication>
+                <site-settings-base j:view="siteSettings"
+                                    jcr:primaryType="jnt:template"
+                                    jcr:mixinTypes="jmix:useUILocale">
+                    <site-publication j:applyOn="jnt:virtualsite"
+                             j:defaultTemplate="false"
+                             j:hiddenTemplate="true"
+                             j:icon="/modules/site-settings-publication/templates/files/publishSite.png"
+                             j:requiredPermissionNames="publish siteAdminPublication"
+                             j:titleKey="siteSettingsPublication.title"
+                             jcr:mixinTypes="jmix:rbTitle"
+                             jcr:primaryType="jnt:contentTemplate">
+                        <pagecontent jcr:primaryType="jnt:contentList">
+                            <site-publication-panel jcr:primaryType="jnt:siteSettingsPublication"/>
+                        </pagecontent>
+                    </site-publication>
+                </site-settings-base>
+            </templates>
+
+        </site-settings-publication>
     </modules>
 </content>

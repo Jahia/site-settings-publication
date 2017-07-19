@@ -128,7 +128,7 @@ public class SiteAdminPublicationJob extends BackgroundJob {
                 List<PublicationInfoNode> nonPublishableInfos = new LinkedList<>();
                 boolean needPublication = false;
                 for (PublicationInfo publicationInfo : publicationInfos) {
-                    needPublication |= populateNonPublishableInfos(publicationInfo.getRoot(), nonPublishableInfos);
+                    needPublication |= needsPublication(publicationInfo.getRoot(), nonPublishableInfos);
                 }
                 if (!nonPublishableInfos.isEmpty()) {
                     logger.warn("Site admin publication job for path [{}] and language [{}] has been aborted due to conflicts or missing mandatory properties", path, language);
@@ -169,18 +169,17 @@ public class SiteAdminPublicationJob extends BackgroundJob {
         });
     }
 
-    private boolean populateNonPublishableInfos(PublicationInfoNode publicationInfoNode, List<PublicationInfoNode> nonPublishableInfos) {
-        // Do a publication only if the content status is different than published
-        boolean needPublication = publicationInfoNode.getStatus() != PublicationInfo.PUBLISHED;
+    private static boolean needsPublication(PublicationInfoNode publicationInfoNode, List<PublicationInfoNode> nonPublishableInfos) {
+        boolean needsPublication = publicationInfoNode.getStatus() != PublicationInfo.PUBLISHED;
         if (publicationInfoNode.getStatus() == PublicationInfo.CONFLICT || publicationInfoNode.getStatus() == PublicationInfo.MANDATORY_LANGUAGE_UNPUBLISHABLE) {
             nonPublishableInfos.add(publicationInfoNode);
         }
         for (PublicationInfoNode child : publicationInfoNode.getChildren()) {
-            needPublication |= populateNonPublishableInfos(child, nonPublishableInfos);
+            needsPublication |= needsPublication(child, nonPublishableInfos);
         }
         for (PublicationInfo reference : publicationInfoNode.getReferences()) {
-            needPublication |= populateNonPublishableInfos(reference.getRoot(), nonPublishableInfos);
+            needsPublication |= needsPublication(reference.getRoot(), nonPublishableInfos);
         }
-        return needPublication;
+        return needsPublication;
     }
 }

@@ -71,32 +71,32 @@ public class SiteAdminPublicationJob extends BackgroundJob {
     /**
      * Key of the job data containing the path of the node to be published.
      */
-    public static String PUBLICATION_JOB_PATH = "path";
+    public static final String PUBLICATION_JOB_PATH = "path";
 
     /**
      * Key of the job data containing code of the language to publish the node in.
      */
-    public static String PUBLICATION_JOB_LANGUAGE = "language";
+    public static final String PUBLICATION_JOB_LANGUAGE = "language";
 
     /**
      * Key of the result status of the job execution
      */
-    public static String PUBLICATION_JOB_RESULT = "result";
+    public static final String PUBLICATION_JOB_RESULT = "result";
 
     /**
      * Key of the reported conflicts path
      */
-    public static String PUBLICATION_JOB_CONFLICTS = "conflict";
+    public static final String PUBLICATION_JOB_CONFLICTS = "conflict";
 
     /**
      * Key of the reported missing properties path
      */
-    public static String PUBLICATION_JOB_MISSING_PROPERTY = "missingProperty";
+    public static final String PUBLICATION_JOB_MISSING_PROPERTY = "missingProperty";
 
     /**
      * Key for UI Locale
      */
-    public static String UI_LOCALE = "uiLocale";
+    public static final String UI_LOCALE = "uiLocale";
 
     private static final Logger logger = LoggerFactory.getLogger(SiteAdminPublicationJob.class);
 

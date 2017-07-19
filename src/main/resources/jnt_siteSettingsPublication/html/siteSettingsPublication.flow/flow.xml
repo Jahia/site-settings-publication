@@ -18,6 +18,7 @@
             <evaluate expression="flowHandler.getPublicationJobs()" result="flowScope.publicationJobs"/>
         </transition>
     </view-state>
+
     <view-state id="lastPublications">
         <transition on="back" to="view"/>
     </view-state>

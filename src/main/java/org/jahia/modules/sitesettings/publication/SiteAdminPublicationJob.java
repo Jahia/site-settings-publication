@@ -69,6 +69,11 @@ public class SiteAdminPublicationJob extends BackgroundJob {
     public static final String NOTHING_TO_PUBLISH = "nothingToPublish";
 
     /**
+     * Key of the job data containing the UUID of the site whose nodes are published.
+     */
+    public static final String PUBLICATION_JOB_SITE_UUID = "siteUuid";
+
+    /**
      * Key of the job data containing the path of the node to be published.
      */
     public static final String PUBLICATION_JOB_PATH = "path";

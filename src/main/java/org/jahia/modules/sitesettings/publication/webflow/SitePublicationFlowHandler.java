@@ -55,6 +55,9 @@ import java.util.Set;
 
 import javax.jcr.RepositoryException;
 
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.Predicate;
+import org.jahia.exceptions.JahiaRuntimeException;
 import org.jahia.modules.sitesettings.publication.SiteAdminPublicationJob;
 import org.jahia.services.content.JCRCallback;
 import org.jahia.services.content.JCRSessionWrapper;
@@ -122,7 +125,14 @@ public class SitePublicationFlowHandler implements Serializable {
     public SitePublication initSitePublication(final RenderContext renderContext) {
         JCRSiteNode site = renderContext.getSite();
 
-        SitePublication sitePublication = new SitePublication(site.getSiteKey(), site.getTitle());
+        String siteUuid;
+        try {
+            siteUuid = site.getIdentifier();
+        } catch (RepositoryException e) {
+            throw new JahiaRuntimeException(e);
+        }
+
+        SitePublication sitePublication = new SitePublication(siteUuid, site.getSiteKey(), site.getTitle());
 
         sitePublication.setNodePath(site.getPath());
         List<String> siteLanguages = new LinkedList<>(site.getLanguages());
@@ -154,10 +164,11 @@ public class SitePublicationFlowHandler implements Serializable {
         });
     }
 
-    private void scheduleJob(String nodePath, String lang, Locale uiLocale) throws SchedulerException {
+    private void scheduleJob(String nodePath, String siteUuid, String lang, Locale uiLocale) throws SchedulerException {
         logger.info("Schedulling publication job for node {} in language {}", nodePath, lang);
         JobDetail jobDetail = BackgroundJob.createJahiaJob("Publication", SiteAdminPublicationJob.class);
         JobDataMap jobDataMap = jobDetail.getJobDataMap();
+        jobDataMap.put(SiteAdminPublicationJob.PUBLICATION_JOB_SITE_UUID, siteUuid);
         jobDataMap.put(SiteAdminPublicationJob.PUBLICATION_JOB_PATH, nodePath);
         jobDataMap.put(SiteAdminPublicationJob.PUBLICATION_JOB_LANGUAGE, lang);
         jobDataMap.put(SiteAdminPublicationJob.UI_LOCALE, uiLocale);
@@ -198,7 +209,7 @@ public class SitePublicationFlowHandler implements Serializable {
             }
 
             for (String lang : sitePublication.getLanguages()) {
-                scheduleJob(isEntireSitePublication ? currentSitePath : sitePublication.getNodePath(), lang, renderContext.getUILocale());
+                scheduleJob((isEntireSitePublication ? currentSitePath : sitePublication.getNodePath()), sitePublication.getCurrentSiteUuid(), lang, renderContext.getUILocale());
             }
             messages.addMessage(new MessageBuilder().info().code("siteSettingsPublication.started").build());
             // we are successful, reset the model data
@@ -212,7 +223,24 @@ public class SitePublicationFlowHandler implements Serializable {
         }
     }
 
-    public List<JobDetail> getPublicationJobs() throws SchedulerException {
-        return schedulerService.getAllJobs(BackgroundJob.getGroupName(SiteAdminPublicationJob.class));
+    public List<JobDetail> getPublicationJobs(final JCRSiteNode site) throws SchedulerException {
+
+        List<JobDetail> publications = schedulerService.getAllJobs(BackgroundJob.getGroupName(SiteAdminPublicationJob.class));
+
+        CollectionUtils.filter(publications, new Predicate() {
+
+            @Override
+            public boolean evaluate(Object job) {
+                JobDataMap publicationData = ((JobDetail) job).getJobDataMap();
+                String siteUuid = (String) publicationData.get(SiteAdminPublicationJob.PUBLICATION_JOB_SITE_UUID);
+                try {
+                    return (siteUuid.equals(site.getIdentifier()));
+                } catch (RepositoryException e) {
+                    throw new JahiaRuntimeException(e);
+                }
+            }
+        });
+
+        return publications;
     }
 }

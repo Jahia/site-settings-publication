@@ -15,7 +15,7 @@
             <evaluate expression="flowHandler.startPublication(sitePublication, externalContext.requestMap.renderContext, messageContext)" result="flowScope.sitePublication"/>
         </transition>
         <transition on="lastPublications" to="lastPublications">
-            <evaluate expression="flowHandler.getPublicationJobs()" result="flowScope.publicationJobs"/>
+            <evaluate expression="flowHandler.getPublicationJobs(externalContext.requestMap.renderContext.site)" result="flowScope.publicationJobs"/>
         </transition>
     </view-state>
 

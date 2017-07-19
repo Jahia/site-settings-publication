@@ -63,6 +63,8 @@ public class SitePublication implements Serializable {
 
     private static final long serialVersionUID = -4565197823923232164L;
 
+    private String currentSiteUuid;
+
     private String currentSiteKey;
 
     private String currentSiteName;
@@ -81,11 +83,14 @@ public class SitePublication implements Serializable {
      * @param siteKey the key of the current site
      * @param siteName the name of the current site
      */
-    public SitePublication(String siteKey, String siteName) {
-        super();
-
+    public SitePublication(String siteUuid, String siteKey, String siteName) {
+        this.currentSiteUuid = siteUuid;
         this.currentSiteKey = siteKey;
         this.currentSiteName = siteName;
+    }
+
+    public String getCurrentSiteUuid() {
+        return currentSiteUuid;
     }
 
     public String getCurrentSiteKey() {

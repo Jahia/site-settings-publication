@@ -99,6 +99,8 @@ public class SiteAdminPublicationJob extends BackgroundJob {
      */
     public static String UI_LOCALE = "uiLocale";
 
+    private final static String[] MAIL_SUBJECT = {"success", "error", "nothingToPublish"};
+
     private static final Logger logger = LoggerFactory.getLogger(SiteAdminPublicationJob.class);
     private static final SimpleDateFormat notificationDateTimeFormat = new SimpleDateFormat("MM-dd-yyyy HH:mm:ss");
 
@@ -174,16 +176,10 @@ public class SiteAdminPublicationJob extends BackgroundJob {
                 // Build subject
                 ResourceBundle resourceBundle = ResourceBundles.get("resources.SiteSettings-Publication", currentLocale);
                 String subjectKey = "siteSettingsPublication.publicationJobs.notification.subject.";
-                switch ((Integer) jobDataMap.get(PUBLICATION_JOB_RESULT)) {
-                    case ERROR:
-                        subjectKey += "error";
-                        break;
-                    case NOTHING_TO_PUBLISH:
-                        subjectKey += "nothingToPublish";
-                        break;
-                    default:
-                        subjectKey += "success";
-                        break;
+                try {
+                    subjectKey += MAIL_SUBJECT[(Integer) jobDataMap.get(PUBLICATION_JOB_RESULT)];
+                } catch (Exception e) {
+                    logger.warn("Unable to send a mail after publication, {} has no valid subject key for the email", jobDataMap.get(PUBLICATION_JOB_RESULT));
                 }
                 // Fill bindings with custom job detail infos.
                 Map<String, Object> bindings = new HashMap<>();
@@ -199,15 +195,15 @@ public class SiteAdminPublicationJob extends BackgroundJob {
                 bindings.putAll(jobDataMap);
                 try {
                     mailService.sendMessageWithTemplate((String) jobDataMap.get(MAIL_TEMPLATE), bindings, mailTo, mailService.getSettings().getFrom(), null, null, currentLocale, "Site Settings - Publication");
-                } catch (RepositoryException | ScriptException e) {
+                } catch (Exception e) {
                     logger.error("Unable to send notification mail to {} because {}", mailTo, e.getMessage());
                     logger.debug("due to error", e);
                 }
             } else {
-                logger.debug("Unable to send mail for user [{}] because the mail information is not set", user.getUserKey());
+                logger.warn("Unable to send mail for user [{}] because the mail information is not set", user.getUserKey());
             }
         } else {
-            logger.debug("Mail service not configured");
+            logger.warn("Mail service not configured");
         }
     }
 

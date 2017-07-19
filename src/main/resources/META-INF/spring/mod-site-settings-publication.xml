@@ -5,8 +5,10 @@
 
     <bean id="messageSource" class="org.jahia.utils.i18n.ModuleMessageSource"/>
 
-    <bean id="mailTemplateLocationService" class="org.jahia.modules.sitesettings.publication.service.MailTemplateLocationService">
-        <property name="mailTemplateLocation" value="${siteSettingsPublication.mail.template:META-INF/mail/notification.vm}"/>
+    <bean id="org.jahia.modules.sitesettings.publication.service.PublicationResultEmailNotificationService" class="org.jahia.modules.sitesettings.publication.service.PublicationResultEmailNotificationService">
+        <property name="userManagerService" ref="JahiaUserManagerService"/>
+        <property name="mailService" ref="MailService"/>
+        <property name="emailTemplate" value="${siteSettingsPublication.mail.template:META-INF/mail/notification.vm}"/>
     </bean>
 
 </beans>

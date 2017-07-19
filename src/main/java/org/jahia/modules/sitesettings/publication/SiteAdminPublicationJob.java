@@ -25,15 +25,10 @@ package org.jahia.modules.sitesettings.publication;
 
 import org.apache.commons.lang.StringUtils;
 import org.jahia.api.Constants;
+import org.jahia.modules.sitesettings.publication.service.PublicationResultEmailNotificationService;
+import org.jahia.services.SpringContextSingleton;
 import org.jahia.services.content.*;
-import org.jahia.services.content.decorator.JCRUserNode;
-import org.jahia.services.mail.MailService;
-import org.jahia.services.mail.MailServiceImpl;
-import org.jahia.services.preferences.user.UserPreferencesHelper;
 import org.jahia.services.scheduler.BackgroundJob;
-import org.jahia.services.usermanager.JahiaUserManagerService;
-import org.jahia.utils.i18n.Messages;
-import org.jahia.utils.i18n.ResourceBundles;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
@@ -41,9 +36,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jcr.RepositoryException;
-import javax.script.ScriptException;
 
-import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
@@ -60,9 +53,20 @@ import java.util.*;
  */
 public class SiteAdminPublicationJob extends BackgroundJob {
 
-    public static final int SUCCESS = 0;
-    public static final int ERROR = 1;
-    public static final int NOTHING_TO_PUBLISH = 2;
+    /**
+     * Job execution result: success.
+     */
+    public static final String SUCCESS = "success";
+
+    /**
+     * Job execution result: it was not possible to publish due to a conflict or a missing mandatory property.
+     */
+    public static final String ERROR = "error";
+
+    /**
+     * Job execution result: there was nothing to publish.
+     */
+    public static final String NOTHING_TO_PUBLISH = "nothingToPublish";
 
     /**
      * Key of the job data containing the path of the node to be published.
@@ -90,19 +94,11 @@ public class SiteAdminPublicationJob extends BackgroundJob {
     public static String PUBLICATION_JOB_MISSING_PROPERTY = "missingProperty";
 
     /**
-     * Key for the mail template
-     */
-    public static String MAIL_TEMPLATE = "mailTemplate";
-
-    /**
      * Key for UI Locale
      */
     public static String UI_LOCALE = "uiLocale";
 
-    private final static String[] MAIL_SUBJECT = {"success", "error", "nothingToPublish"};
-
     private static final Logger logger = LoggerFactory.getLogger(SiteAdminPublicationJob.class);
-    private static final SimpleDateFormat notificationDateTimeFormat = new SimpleDateFormat("MM-dd-yyyy HH:mm:ss");
 
     @Override
     public void executeJahiaJob(JobExecutionContext jobExecutionContext) throws Exception {
@@ -157,54 +153,20 @@ public class SiteAdminPublicationJob extends BackgroundJob {
                     publicationService.publishByMainId(node.getIdentifier(), Constants.EDIT_WORKSPACE, Constants.LIVE_WORKSPACE, Collections.singleton(language), true, Collections.<String>emptyList());
                     jobDataMap.put(PUBLICATION_JOB_RESULT, SUCCESS);
                 }
-                sendMail(jobDataMap);
+
+                // send notification
+                try {
+                    PublicationResultEmailNotificationService notificationService = (PublicationResultEmailNotificationService) SpringContextSingleton.getBeanInModulesContext("org.jahia.modules.sitesettings.publication.service.PublicationResultEmailNotificationService");
+                    notificationService.notifyJobCompleted(jobDataMap);
+                } catch (Exception e) {
+                    // avoid failing the entire job due to any secondary notification issues, just log instead
+                    String message = "Error sending notification aboult completion of publication of " + path + " in language " + language + " (was " + jobDataMap.get(PUBLICATION_JOB_RESULT) + ")";
+                    logger.error(message, e);
+                }
+
                 return null;
             }
         });
-    }
-
-    @SuppressWarnings("unchecked")
-    private void sendMail(JobDataMap jobDataMap) {
-        MailService mailService = MailServiceImpl.getInstance();
-        if (mailService.isEnabled()) {
-            // get user mail informations
-            JahiaUserManagerService userManagerService = JahiaUserManagerService.getInstance();
-            JCRUserNode user = userManagerService.lookupUserByPath((String) jobDataMap.get(BackgroundJob.JOB_USERKEY));
-            String mailTo = UserPreferencesHelper.getEmailAddress(user);
-            if (StringUtils.isNotEmpty(mailTo)) {
-                Locale currentLocale = (Locale) jobDataMap.get(UI_LOCALE);
-                // Build subject
-                ResourceBundle resourceBundle = ResourceBundles.get("resources.SiteSettings-Publication", currentLocale);
-                String subjectKey = "siteSettingsPublication.publicationJobs.notification.subject.";
-                try {
-                    subjectKey += MAIL_SUBJECT[(Integer) jobDataMap.get(PUBLICATION_JOB_RESULT)];
-                } catch (Exception e) {
-                    logger.warn("Unable to send a mail after publication, {} has no valid subject key for the email", jobDataMap.get(PUBLICATION_JOB_RESULT));
-                }
-                // Fill bindings with custom job detail infos.
-                Map<String, Object> bindings = new HashMap<>();
-                bindings.put("conflictSize", jobDataMap.get(PUBLICATION_JOB_CONFLICTS) != null ? ((List<?>) jobDataMap.get(PUBLICATION_JOB_CONFLICTS)).size() : 0);
-                bindings.put("missingPropertySize", jobDataMap.get(PUBLICATION_JOB_MISSING_PROPERTY) != null ? ((List<?>) jobDataMap.get
-                        (PUBLICATION_JOB_MISSING_PROPERTY)).size() : 0);
-                bindings.put("beginDate", notificationDateTimeFormat.format(new Date(Long.parseLong((String) jobDataMap.get(BackgroundJob.JOB_BEGIN)))));
-                String jobEnd = (String) jobDataMap.get(BackgroundJob.JOB_END);
-                if (StringUtils.isNotEmpty(jobEnd)) {
-                    bindings.put("endDate", notificationDateTimeFormat.format(new Date(Long.parseLong(jobEnd))));
-                }
-                bindings.put("subject", Messages.getWithArgs(resourceBundle, subjectKey, jobDataMap.get(PUBLICATION_JOB_PATH), jobDataMap.get(PUBLICATION_JOB_LANGUAGE)));
-                bindings.putAll(jobDataMap);
-                try {
-                    mailService.sendMessageWithTemplate((String) jobDataMap.get(MAIL_TEMPLATE), bindings, mailTo, mailService.getSettings().getFrom(), null, null, currentLocale, "Site Settings - Publication");
-                } catch (Exception e) {
-                    logger.error("Unable to send notification mail to {} because {}", mailTo, e.getMessage());
-                    logger.debug("due to error", e);
-                }
-            } else {
-                logger.warn("Unable to send mail for user [{}] because the mail information is not set", user.getUserKey());
-            }
-        } else {
-            logger.warn("Mail service not configured");
-        }
     }
 
     private boolean populateNonPublishableInfos(PublicationInfoNode publicationInfoNode, List<PublicationInfoNode> nonPublishableInfos) {

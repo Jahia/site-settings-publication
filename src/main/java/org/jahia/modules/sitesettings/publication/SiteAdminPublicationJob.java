@@ -84,19 +84,24 @@ public class SiteAdminPublicationJob extends BackgroundJob {
     public static final String PUBLICATION_JOB_LANGUAGE = "language";
 
     /**
-     * Key of the result status of the job execution
+     * Key of the result status of the job execution.
      */
     public static final String PUBLICATION_JOB_RESULT = "result";
 
     /**
-     * Key of the reported conflicts path
+     * Key of the reported conflicts path.
      */
     public static final String PUBLICATION_JOB_CONFLICTS = "conflict";
 
     /**
-     * Key of the reported missing properties path
+     * Key of the reported missing properties path.
      */
     public static final String PUBLICATION_JOB_MISSING_PROPERTY = "missingProperty";
+
+    /**
+     * Key of the successful publication end timestamp value.
+     */
+    public static final String PUBLICATION_JOB_END = "publicationEnd";
 
     /**
      * Key for UI Locale
@@ -156,6 +161,7 @@ public class SiteAdminPublicationJob extends BackgroundJob {
                 } else {
                     // do the publication
                     publicationService.publishByMainId(node.getIdentifier(), Constants.EDIT_WORKSPACE, Constants.LIVE_WORKSPACE, Collections.singleton(language), true, Collections.<String>emptyList());
+                    jobDataMap.put(PUBLICATION_JOB_END, Long.toString(System.currentTimeMillis()));
                     jobDataMap.put(PUBLICATION_JOB_RESULT, SUCCESS);
                 }
 

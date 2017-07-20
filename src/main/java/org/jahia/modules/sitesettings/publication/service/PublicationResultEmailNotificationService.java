@@ -113,7 +113,7 @@ public class PublicationResultEmailNotificationService {
         bindings.put("conflictSize", (conflicts == null ? 0 : conflicts.size()));
         bindings.put("missingPropertySize", (missingProperties == null ? 0 : missingProperties.size()));
         bindings.put("beginDate", NOTIFICATION_DATE_TIME_FORMAT.format(new Date(Long.parseLong((String) jobDataMap.get(BackgroundJob.JOB_BEGIN)))));
-        String jobEnd = (String) jobDataMap.get(BackgroundJob.JOB_END);
+        String jobEnd = (String) jobDataMap.get(SiteAdminPublicationJob.PUBLICATION_JOB_END);
         if (StringUtils.isNotEmpty(jobEnd)) {
             bindings.put("endDate", NOTIFICATION_DATE_TIME_FORMAT.format(new Date(Long.parseLong(jobEnd))));
         }

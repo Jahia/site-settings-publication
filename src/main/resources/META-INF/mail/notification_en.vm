@@ -6,7 +6,7 @@ Hello,
     #elseif ($result == 'nothingToPublish')
         was not executed because all the contents were already published.
     #elseif ($result == 'success')
-        was successfully completed on $endDate.\n
+        was successfully completed on $endDate.
     #else
         [$result]
     #end

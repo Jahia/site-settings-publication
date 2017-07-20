@@ -126,7 +126,7 @@
 <div class="text-right">
     <form action="${flowExecutionUrl}" method="post" style="display: inline;">
         <input type="hidden" name="_eventId" value="lastPublications"/>
-        <button class="btn" type="submit" name="mybutton">
+        <button class="btn" type="submit" name="showLastPublicationsButton">
             <i class="icon-list"></i>
             &nbsp;<fmt:message key="siteSettingsPublication.showLastPublications"/>
         </button>

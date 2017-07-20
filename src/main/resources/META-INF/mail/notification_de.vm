@@ -1,12 +1,14 @@
 Hallo,
 <p>
     die Veröffentlichung von $path in $language gestartet am $beginDate
-    #if ($result == 1)
+    #if ($result == 'error')
         wurde nicht durchgeführt, weil
-    #elseif ($result == 2)
+    #elseif ($result == 'nothingToPublish')
         wurde nicht durchgeführt, weil bereits alle Inhalte veröffentlicht sind.
-    #else
+    #elseif ($result == 'success')
         wurde erfolgreich beendet am $endDate.\n
+    #else
+        [$result]
     #end
 </p>
 <p>

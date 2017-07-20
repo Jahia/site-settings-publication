@@ -1,12 +1,14 @@
 Bonjour,
 <p>
     La publication de $path en $language lancée le $beginDate
-    #if ($result == 1)
+    #if ($result == 'error')
         n’a pas été exécutée.
-    #elseif ($result == 2)
+    #elseif ($result == 'nothingToPublish')
         n’a pas été exécutée car tous les contenus étaient déjà publiés.
-    #else
+    #elseif ($result == 'success')
         s’est terminée avec succès le $endDate.
+    #else
+        [$result]
     #end
 </p>
 <p>

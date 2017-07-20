@@ -41,7 +41,8 @@
             $(document).ready(function () {
                 $("#tablePublicationJobs").tablesorter({
                     sortList: [[0, 0]],
-                    headers: {4: {sorter: false}}
+                    dateformat: "mmddyyyy",
+                    headers: {  0: { sorter: "shortDate" }, 5: {sorter: false}}
                 });
             });
 
@@ -54,7 +55,7 @@
     <div>
         <form action="${flowExecutionUrl}" method="post" style="display: inline;">
             <input type="hidden" name="_eventId" value="back"/>
-            <button class="btn" type="submit" name="mybutton">
+            <button class="btn" type="submit" name="backButton">
                 <i class="icon-arrow-left"></i>
                 &nbsp;<fmt:message key="siteSettingsPublication.publicationJobs.back"/>
             </button>
@@ -109,17 +110,7 @@
                                     ${jobDetail['language']}
                                 </td>
                                 <td>
-                                    <c:choose>
-                                        <c:when test="${jobDetail['result'] == ERROR}">
-                                            <fmt:message key="siteSettingsPublication.publicationJobs.error"/>
-                                        </c:when>
-                                        <c:when test="${jobDetail['result'] == SUCCESS}">
-                                            <fmt:message key="siteSettingsPublication.publicationJobs.success"/>
-                                        </c:when>
-                                        <c:when test="${jobDetail['result'] == NOTHING_TO_PUBLISH}">
-                                            <fmt:message key="siteSettingsPublication.publicationJobs.nothingToPublish"/>
-                                        </c:when>
-                                    </c:choose>
+                                    <fmt:message key="siteSettingsPublication.publicationJobs.${jobDetail['result']}"/>
                                 </td>
                                 <td>
                                     <c:choose>

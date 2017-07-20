@@ -1,33 +1,33 @@
 Hello,
 <p>
-The publication of $path in $language started on $beginDate
-#if ( $result == 1)
-was not executed.
-#elseif ( $result == 2)
-was not executed because all the contents were already published.
-#else
-was successfully completed on $endDate.\n
-#end
+    The publication of $path in $language started on $beginDate
+    #if ($result == 1)
+        was not executed.
+    #elseif ($result == 2)
+        was not executed because all the contents were already published.
+    #else
+        was successfully completed on $endDate.\n
+    #end
 </p>
 <p>
-#if( $conflictSize > 0 )
-    The following contents has the same path as the following nodes already exist in live:
-    <ul>
-    #foreach ($entry in $conflict)
-        <li>- $entry</li>
+    #if ($conflictSize > 0)
+        The following contents has the same path as the following nodes already exist in live:
+        <ul>
+            #foreach ($entry in $conflict)
+                <li>- $entry</li>
+            #end
+        </ul>
     #end
-    </ul>
-#end
 </p>
 <p>
-#if( $missingPropertySize > 0 )
-    The following contents are missing mandatory properties:
-    <ul>
-    #foreach ($entry in $missingProperty)
-        <li>- $entry</li>
+    #if ($missingPropertySize > 0)
+        The following contents are missing mandatory properties:
+        <ul>
+            #foreach ($entry in $missingProperty)
+                <li>- $entry</li>
+            #end
+        </ul>
     #end
-    </ul>
-#end
 </p>
 
 Thank you

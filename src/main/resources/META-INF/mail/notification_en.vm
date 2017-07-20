@@ -5,6 +5,8 @@ Hello,
         was not executed.
     #elseif ($result == 'nothingToPublish')
         was not executed because all the contents were already published.
+    #elseif ($result == 'unexpectedFailure')
+        failed due to an unexpected failure. Please contact your administrator.
     #elseif ($result == 'success')
         was successfully completed on $endDate.
     #else

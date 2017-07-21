@@ -5,6 +5,8 @@ Bonjour,
         n’a pas été exécutée.
     #elseif ($result == 'nothingToPublish')
         n’a pas été exécutée car tous les contenus étaient déjà publiés.
+    #elseif ($result == 'unexpectedFailure')
+        a échoué à cause d'un problème innatendu. Merci de contacter votre administrateur.
     #elseif ($result == 'success')
         s’est terminée avec succès le $endDate.
     #else

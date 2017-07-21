@@ -5,6 +5,8 @@ Hallo,
         wurde nicht durchgeführt, weil
     #elseif ($result == 'nothingToPublish')
         wurde nicht durchgeführt, weil bereits alle Inhalte veröffentlicht sind.
+    #elseif ($result == 'unexpectedFailure')
+        wurde wegen eines unerwarteten Fehlers unterbrochen. Bitte kontaktieren Sie Ihren Administrator.
     #elseif ($result == 'success')
         wurde erfolgreich beendet am $endDate.
     #else

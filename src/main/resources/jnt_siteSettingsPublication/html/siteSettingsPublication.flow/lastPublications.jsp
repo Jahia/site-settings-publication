@@ -29,6 +29,10 @@
 <spring:eval var="SUCCESS" expression="T(org.jahia.modules.sitesettings.publication.SiteAdminPublicationJob).SUCCESS"/>
 <spring:eval var="ERROR" expression="T(org.jahia.modules.sitesettings.publication.SiteAdminPublicationJob).ERROR"/>
 <spring:eval var="NOTHING_TO_PUBLISH" expression="T(org.jahia.modules.sitesettings.publication.SiteAdminPublicationJob).NOTHING_TO_PUBLISH"/>
+<spring:eval var="STATUS_ADDED" expression="T(org.jahia.services.scheduler.BackgroundJob).STATUS_ADDED"/>
+<spring:eval var="STATUS_SCHEDULED" expression="T(org.jahia.services.scheduler.BackgroundJob).STATUS_SCHEDULED"/>
+<spring:eval var="STATUS_EXECUTING" expression="T(org.jahia.services.scheduler.BackgroundJob).STATUS_EXECUTING"/>
+<spring:eval var="STATUS_CANCELED" expression="T(org.jahia.services.scheduler.BackgroundJob).STATUS_CANCELED"/>
 
 <h2><fmt:message key="siteSettingsPublication.publicationJobs.title"/></h2>
 
@@ -93,14 +97,18 @@
                             <c:set var="jobDetail" value="${publicationJob.jobDataMap}"/>
                             <jsp:useBean id="dateValue" class="java.util.Date"/>
                             <jsp:setProperty name="dateValue" property="time" value="${jobDetail['begin']}"/>
-                            <fmt:formatDate value="${dateValue}" pattern="MM/dd/yyyy HH:mm:ss" var="beginDate"/>
+	                        <fmt:formatDate value="${dateValue}" pattern="MM/dd/yyyy HH:mm:ss" var="beginDate"/>
                             <tr>
                                 <td>
-                                        ${beginDate}
+                                    <c:if test="${not empty jobDetail['begin']}">
+			                            ${beginDate}
+			                        </c:if>
                                 </td>
                                 <jsp:setProperty name="dateValue" property="time" value="${jobDetail['end']}"/>
                                 <td>
-                                    <fmt:formatDate value="${dateValue}" pattern="MM/dd/yyyy HH:mm:ss"/>
+                                    <c:if test="${not empty jobDetail['end']}">
+		                    			<fmt:formatDate value="${dateValue}" pattern="MM/dd/yyyy HH:mm:ss"/>
+			                        </c:if>
                                 </td>
                                 <td>
                                         ${jobDetail['path']}
@@ -109,10 +117,20 @@
                                         ${jobDetail['language']}
                                 </td>
                                 <td>
-                                    <fmt:message key="siteSettingsPublication.publicationJobs.${jobDetail['result']}"/>
+                                	<c:choose>
+                                    	<c:when test="${jobDetail['result'] == null}">
+	                                    	<fmt:message key="siteSettingsPublication.publicationJobs.${jobDetail['status']}"/>
+	                                	</c:when>
+	                                	<c:otherwise>
+	                                    	<fmt:message key="siteSettingsPublication.publicationJobs.${jobDetail['result']}"/>
+	                                	</c:otherwise>
+	                                </c:choose>
                                 </td>
                                 <td>
                                     <c:choose>
+                                    	<c:when test="${jobDetail['result'] == null}">
+	                                    	<fmt:message key="siteSettingsPublication.publicationJobs.details.${jobDetail['status']}"/>
+                                    	</c:when>
                                         <c:when test="${jobDetail['result'] == ERROR}">
                                             <div id="detail${count}" class="modal hide fade">
                                                 <div class="modal-header">

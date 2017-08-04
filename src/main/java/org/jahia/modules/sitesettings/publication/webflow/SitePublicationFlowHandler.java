@@ -59,6 +59,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.Predicate;
 import org.jahia.exceptions.JahiaRuntimeException;
 import org.jahia.modules.sitesettings.publication.SiteAdminPublicationJob;
+import org.jahia.modules.sitesettings.publication.StartSiteAdminPublicationJob;
 import org.jahia.services.content.JCRCallback;
 import org.jahia.services.content.JCRSessionWrapper;
 import org.jahia.services.content.JCRTemplate;
@@ -164,17 +165,6 @@ public class SitePublicationFlowHandler implements Serializable {
         });
     }
 
-    private void scheduleJob(String nodePath, String siteUuid, String lang, Locale uiLocale) throws SchedulerException {
-        logger.info("Schedulling publication job for node {} in language {}", nodePath, lang);
-        JobDetail jobDetail = BackgroundJob.createJahiaJob("Publication", SiteAdminPublicationJob.class);
-        JobDataMap jobDataMap = jobDetail.getJobDataMap();
-        jobDataMap.put(SiteAdminPublicationJob.PUBLICATION_JOB_SITE_UUID, siteUuid);
-        jobDataMap.put(SiteAdminPublicationJob.PUBLICATION_JOB_PATH, nodePath);
-        jobDataMap.put(SiteAdminPublicationJob.PUBLICATION_JOB_LANGUAGE, lang);
-        jobDataMap.put(SiteAdminPublicationJob.UI_LOCALE, uiLocale);
-        schedulerService.scheduleJobNow(jobDetail);
-    }
-
     /**
      * Schedules background jobs for the site publication in selected languages, preliminary performing data validation, i.e. non empty node
      * path and at least one language selected.
@@ -208,9 +198,16 @@ public class SitePublicationFlowHandler implements Serializable {
                 return sitePublication;
             }
 
-            for (String lang : sitePublication.getLanguages()) {
-                scheduleJob((isEntireSitePublication ? currentSitePath : sitePublication.getNodePath()), sitePublication.getCurrentSiteUuid(), lang, renderContext.getUILocale());
-            }
+            String nodePath = (isEntireSitePublication ? currentSitePath : sitePublication.getNodePath());
+            logger.info("Scheduling start publication job for node {}", nodePath);
+            JobDetail jobDetail = BackgroundJob.createJahiaJob("StartPublication", StartSiteAdminPublicationJob.class);
+            JobDataMap jobDataMap = jobDetail.getJobDataMap();
+            jobDataMap.put(StartSiteAdminPublicationJob.PUBLICATION_JOB_SITE_UUID, sitePublication.getCurrentSiteUuid());
+            jobDataMap.put(StartSiteAdminPublicationJob.PUBLICATION_JOB_PATH, nodePath);
+            jobDataMap.put(StartSiteAdminPublicationJob.PUBLICATION_JOB_LANGUAGES, sitePublication.getLanguages());
+            jobDataMap.put(StartSiteAdminPublicationJob.PUBLICATION_JOB_FORCE, sitePublication.getForce());
+            jobDataMap.put(StartSiteAdminPublicationJob.PUBLICATION_JOB_UI_LOCALE, renderContext.getUILocale());
+            schedulerService.scheduleJobNow(jobDetail);
             messages.addMessage(new MessageBuilder().info().code("siteSettingsPublication.started").build());
             // we are successful, reset the model data
             return initSitePublication(renderContext);

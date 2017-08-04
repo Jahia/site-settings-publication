@@ -77,6 +77,8 @@ public class SitePublication implements Serializable {
 
     private List<String> siteLanguages = Collections.emptyList();
 
+    private boolean force;
+
     /**
      * Initializes an instance of this model object.
      *
@@ -117,6 +119,10 @@ public class SitePublication implements Serializable {
         return siteLanguages;
     }
 
+    public boolean getForce() {
+        return force;
+    }
+
     public void setLanguages(Set<String> languages) {
         this.languages = languages;
     }
@@ -131,5 +137,9 @@ public class SitePublication implements Serializable {
 
     public void setSiteLanguages(List<String> siteLanguages) {
         this.siteLanguages = siteLanguages;
+    }
+
+    public void setForce(boolean force) {
+        this.force = force;
     }
 }

@@ -207,6 +207,18 @@
             <fieldset>
                 <div class="container-fluid">
                     <div class="row-fluid">
+                        <div class="span6">
+                            <label for="force">
+                                <input type="checkbox" id="force" name="force" ${sitePublication.force ? 'checked="checked"' : ''}/>
+                                <fmt:message key="siteSettingsPublication.force"/>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </fieldset>
+            <fieldset>
+                <div class="container-fluid">
+                    <div class="row-fluid">
                         <div class="span12">
                             <button class="btn btn-primary" type="submit" id="btnSitePublicationPublish" name="_eventId_publish" onclick="sitePublicationConfirm(); return false;" ${sitePublication.scope == null || multipleSiteLanguages && empty sitePublication.languages ? 'disabled="disabled"' : ''}>
                                 <i class="icon-ok-sign icon-white"></i>

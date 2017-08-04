@@ -59,7 +59,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.Predicate;
 import org.jahia.exceptions.JahiaRuntimeException;
 import org.jahia.modules.sitesettings.publication.SiteAdminPublicationJob;
-import org.jahia.modules.sitesettings.publication.StartSiteAdminPublicationJob;
+import org.jahia.modules.sitesettings.publication.SiteAdminPublicationStartJob;
 import org.jahia.services.content.JCRCallback;
 import org.jahia.services.content.JCRSessionWrapper;
 import org.jahia.services.content.JCRTemplate;
@@ -200,13 +200,13 @@ public class SitePublicationFlowHandler implements Serializable {
 
             String nodePath = (isEntireSitePublication ? currentSitePath : sitePublication.getNodePath());
             logger.info("Scheduling start publication job for node {}", nodePath);
-            JobDetail jobDetail = BackgroundJob.createJahiaJob("StartPublication", StartSiteAdminPublicationJob.class);
+            JobDetail jobDetail = BackgroundJob.createJahiaJob("StartPublication", SiteAdminPublicationStartJob.class);
             JobDataMap jobDataMap = jobDetail.getJobDataMap();
-            jobDataMap.put(StartSiteAdminPublicationJob.PUBLICATION_JOB_SITE_UUID, sitePublication.getCurrentSiteUuid());
-            jobDataMap.put(StartSiteAdminPublicationJob.PUBLICATION_JOB_PATH, nodePath);
-            jobDataMap.put(StartSiteAdminPublicationJob.PUBLICATION_JOB_LANGUAGES, sitePublication.getLanguages());
-            jobDataMap.put(StartSiteAdminPublicationJob.PUBLICATION_JOB_FORCE, sitePublication.getForce());
-            jobDataMap.put(StartSiteAdminPublicationJob.PUBLICATION_JOB_UI_LOCALE, renderContext.getUILocale());
+            jobDataMap.put(SiteAdminPublicationStartJob.PUBLICATION_JOB_SITE_UUID, sitePublication.getCurrentSiteUuid());
+            jobDataMap.put(SiteAdminPublicationStartJob.PUBLICATION_JOB_PATH, nodePath);
+            jobDataMap.put(SiteAdminPublicationStartJob.PUBLICATION_JOB_LANGUAGES, sitePublication.getLanguages());
+            jobDataMap.put(SiteAdminPublicationStartJob.PUBLICATION_JOB_FORCE, sitePublication.getForce());
+            jobDataMap.put(SiteAdminPublicationStartJob.PUBLICATION_JOB_UI_LOCALE, renderContext.getUILocale());
             schedulerService.scheduleJobNow(jobDetail);
             messages.addMessage(new MessageBuilder().info().code("siteSettingsPublication.started").build());
             // we are successful, reset the model data

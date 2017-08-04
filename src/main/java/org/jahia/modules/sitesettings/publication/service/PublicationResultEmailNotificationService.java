@@ -44,6 +44,7 @@
 package org.jahia.modules.sitesettings.publication.service;
 
 import java.text.SimpleDateFormat;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -57,6 +58,7 @@ import javax.script.ScriptException;
 import org.apache.commons.lang.StringUtils;
 import org.jahia.exceptions.JahiaRuntimeException;
 import org.jahia.modules.sitesettings.publication.SiteAdminPublicationJob;
+import org.jahia.modules.sitesettings.publication.SiteAdminPublicationStartJob;
 import org.jahia.services.content.decorator.JCRUserNode;
 import org.jahia.services.mail.MailService;
 import org.jahia.services.preferences.user.UserPreferencesHelper;
@@ -69,7 +71,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Sends email notifications on SiteAdminPublicationJob completion.
+ * Sends email notifications on SiteAdminPublicationJob/SiteAdminPublicationStartJob completion.
  */
 public class PublicationResultEmailNotificationService {
 
@@ -81,7 +83,7 @@ public class PublicationResultEmailNotificationService {
     private String emailTemplate;
 
     /**
-     * Send email notification about SiteAdminPublicationJob completion.
+     * Send email notification about SiteAdminPublicationJob/SiteAdminPublicationStartJob completion.
      *
      * @param jobDataMap Job details
      */
@@ -101,7 +103,7 @@ public class PublicationResultEmailNotificationService {
         }
 
         // Build subject.
-        Locale locale = (Locale) jobDataMap.get(SiteAdminPublicationJob.UI_LOCALE);
+        Locale locale = (Locale) jobDataMap.get(SiteAdminPublicationJob.PUBLICATION_JOB_UI_LOCALE);
         ResourceBundle resourceBundle = ResourceBundles.get("resources.SiteSettings-Publication", locale);
         String publicationResult = (String) jobDataMap.get(SiteAdminPublicationJob.PUBLICATION_JOB_RESULT);
         String subjectKey = "siteSettingsPublication.publicationJobs.notification.subject." + publicationResult;
@@ -117,7 +119,13 @@ public class PublicationResultEmailNotificationService {
         if (StringUtils.isNotEmpty(jobEnd)) {
             bindings.put("endDate", NOTIFICATION_DATE_TIME_FORMAT.format(new Date(Long.parseLong(jobEnd))));
         }
-        bindings.put("subject", Messages.getWithArgs(resourceBundle, subjectKey, jobDataMap.get(SiteAdminPublicationJob.PUBLICATION_JOB_PATH), jobDataMap.get(SiteAdminPublicationJob.PUBLICATION_JOB_LANGUAGE)));
+        String language = jobDataMap.getString(SiteAdminPublicationJob.PUBLICATION_JOB_LANGUAGE);
+        if (language == null) {
+            Collection<String> languages = (Collection<String>) jobDataMap.get(SiteAdminPublicationStartJob.PUBLICATION_JOB_LANGUAGES);
+            language = StringUtils.join(languages, ',');
+        }
+        bindings.put("language", language);
+        bindings.put("subject", Messages.getWithArgs(resourceBundle, subjectKey, jobDataMap.get(SiteAdminPublicationJob.PUBLICATION_JOB_PATH), language));
         bindings.putAll(jobDataMap);
 
         try {

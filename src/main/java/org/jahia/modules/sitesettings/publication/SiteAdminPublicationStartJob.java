@@ -2,7 +2,7 @@ package org.jahia.modules.sitesettings.publication;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 
@@ -22,29 +22,24 @@ import org.jahia.services.scheduler.BackgroundJob;
 import org.jahia.services.scheduler.SchedulerService;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
-import org.quartz.JobExecutionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class StartSiteAdminPublicationJob extends BackgroundJob {
+public class SiteAdminPublicationStartJob extends SiteAdminPublicationJobSupport {
 
-    public static final String PUBLICATION_JOB_SITE_UUID = "siteUuid";
-    public static final String PUBLICATION_JOB_PATH = "path";
     public static final String PUBLICATION_JOB_LANGUAGES = "languages";
     public static final String PUBLICATION_JOB_FORCE = "force";
-    public static final String PUBLICATION_JOB_UI_LOCALE = "uiLocale";
 
-    private static final Logger logger = LoggerFactory.getLogger(StartSiteAdminPublicationJob.class);
+    private static final Logger logger = LoggerFactory.getLogger(SiteAdminPublicationStartJob.class);
 
     @Override
-    public void executeJahiaJob(JobExecutionContext jobExecutionContext) throws Exception {
+    protected void doExecute(JobDataMap jobDataMap) throws Exception {
 
-        JobDataMap dataMap = jobExecutionContext.getJobDetail().getJobDataMap();
-        String siteUuid = dataMap.getString(PUBLICATION_JOB_SITE_UUID);
-        final String path = dataMap.getString(PUBLICATION_JOB_PATH);
-        @SuppressWarnings("unchecked") Collection<String> languages = (Collection<String>) dataMap.get(PUBLICATION_JOB_LANGUAGES);
-        boolean force = dataMap.getBoolean(PUBLICATION_JOB_FORCE);
-        Locale uiLocale = (Locale) dataMap.get(PUBLICATION_JOB_UI_LOCALE);
+        final String path = jobDataMap.getString(PUBLICATION_JOB_PATH);
+        String siteUuid = jobDataMap.getString(PUBLICATION_JOB_SITE_UUID);
+        @SuppressWarnings("unchecked") Collection<String> languages = (Collection<String>) jobDataMap.get(PUBLICATION_JOB_LANGUAGES);
+        boolean force = jobDataMap.getBoolean(PUBLICATION_JOB_FORCE);
+        Locale uiLocale = (Locale) jobDataMap.get(PUBLICATION_JOB_UI_LOCALE);
 
         if (force) {
 
@@ -57,7 +52,7 @@ public class StartSiteAdminPublicationJob extends BackgroundJob {
             });
 
             JCRPublicationService publicationService = (JCRPublicationService) SpringContextSingleton.getBean("jcrPublicationService");
-            LinkedHashSet<String> missingMandatoryPropertiesNodes = new LinkedHashSet<>();
+            LinkedList<String> missingMandatoryPropertiesNodes = new LinkedList<>();
             for (String language : languages) {
                 List<PublicationInfo> publicationInfos = publicationService.getPublicationInfo(node.getIdentifier(), Collections.singleton(language), true, true, true, Constants.EDIT_WORKSPACE, Constants.LIVE_WORKSPACE);
                 for (PublicationInfo publicationInfo : publicationInfos) {
@@ -79,8 +74,10 @@ public class StartSiteAdminPublicationJob extends BackgroundJob {
                         return null;
                     }
                 });
+
             } else {
-                // TODO: Send notification
+                jobDataMap.put(PUBLICATION_JOB_RESULT, ERROR);
+                jobDataMap.put(PUBLICATION_JOB_MISSING_PROPERTY, missingMandatoryPropertiesNodes);
                 return;
             }
         }
@@ -88,13 +85,22 @@ public class StartSiteAdminPublicationJob extends BackgroundJob {
         SchedulerService schedulerService = (SchedulerService) SpringContextSingleton.getBean("SchedulerService");
         for (String language : languages) {
             logger.info("Schedulling publication job for node {} in language {}", path, language);
-            JobDetail jobDetail = BackgroundJob.createJahiaJob("Publication", SiteAdminPublicationJob.class);
-            JobDataMap jobDataMap = jobDetail.getJobDataMap();
-            jobDataMap.put(SiteAdminPublicationJob.PUBLICATION_JOB_SITE_UUID, siteUuid);
-            jobDataMap.put(SiteAdminPublicationJob.PUBLICATION_JOB_PATH, path);
-            jobDataMap.put(SiteAdminPublicationJob.PUBLICATION_JOB_LANGUAGE, language);
-            jobDataMap.put(SiteAdminPublicationJob.UI_LOCALE, uiLocale);
-            schedulerService.scheduleJobNow(jobDetail);
+            JobDetail publicationJobDetail = BackgroundJob.createJahiaJob("Publication", SiteAdminPublicationJob.class);
+            JobDataMap publicationJobDataMap = publicationJobDetail.getJobDataMap();
+            publicationJobDataMap.put(SiteAdminPublicationJob.PUBLICATION_JOB_SITE_UUID, siteUuid);
+            publicationJobDataMap.put(SiteAdminPublicationJob.PUBLICATION_JOB_PATH, path);
+            publicationJobDataMap.put(SiteAdminPublicationJob.PUBLICATION_JOB_LANGUAGE, language);
+            publicationJobDataMap.put(SiteAdminPublicationJob.PUBLICATION_JOB_UI_LOCALE, uiLocale);
+            schedulerService.scheduleJobNow(publicationJobDetail);
+        }
+        jobDataMap.put(PUBLICATION_JOB_RESULT, SUCCESS);
+    }
+
+    @Override
+    protected void sendNotification(JobDataMap jobDataMap) {
+        String result = jobDataMap.getString(PUBLICATION_JOB_RESULT);
+        if (!result.equals(SUCCESS)) {
+            super.sendNotification(jobDataMap);
         }
     }
 }

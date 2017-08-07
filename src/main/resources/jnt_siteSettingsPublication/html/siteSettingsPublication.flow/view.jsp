@@ -24,8 +24,12 @@
 <fmt:message var="i18nSitePublication" key="siteSettingsPublication.title"/>
 <fmt:message var="i18nError" key="label.error"/>
 <fmt:message var="i18nNodePathInvalid" key="siteSettingsPublication.scope.node.invalid"/>
+<fmt:message var="i18nWarnForceTitle" key="label.warning"/>
+<fmt:message var="i18nWarnForceMessage" key="siteSettingsPublication.force.warn"/>
+<fmt:message var="i18nLastWarnForce" key="siteSettingsPublication.force.lastWarn"/>
 <fmt:message var="i18nWaiting" key="label.workInProgressTitle"/>
 <fmt:message var="i18nCancel" key="label.cancel"/>
+<fmt:message var="i18nClose" key="label.close"/>
 <fmt:message var="i18nPublish" key="label.publish"/>
 <fmt:message var="i18nConfirmSite" key="siteSettingsPublication.confirm.site">
     <fmt:param value="${sitePublication.currentSiteName}"/>
@@ -61,8 +65,10 @@
             $('input[name="languages"]:checked').each(function() {
                 msgConfirm = msgConfirm + '<li>' + $(this).attr('title') + '</li>';
             });
-            msgConfirm = msgConfirm + '</ul>'
-                         + '${functions:escapeJavaScript(i18nConfirmBackground)}';
+            msgConfirm += '</ul>${functions:escapeJavaScript(i18nConfirmBackground)}';
+            if ($('#force').is(':checked')) {
+                msgConfirm += '<br/><br/><span class="lastWarning">${functions:escapeJavaScript(i18nLastWarnForce)}</span>'
+            }
             bootbox.confirm({
                 title: '${functions:escapeJavaScript(i18nSitePublication)}',
                 message: msgConfirm,
@@ -82,6 +88,21 @@
                 }
             });
             return true;
+        }
+
+        function forcePublicationWarn() {
+            if (!$('#force').is(':checked')) {
+                return;
+            }
+            bootbox.alert({
+                title: '${functions:escapeJavaScript(i18nWarnForceTitle)}',
+                message: '${functions:escapeJavaScript(i18nWarnForceMessage)}',
+                buttons: {
+                    ok: {
+                        label: '${functions:escapeJavaScript(i18nClose)}'
+                    }
+                }
+            });
         }
 
         $(document).ready(function() {
@@ -209,7 +230,7 @@
                     <div class="row-fluid">
                         <div class="span6">
                             <label for="force">
-                                <input type="checkbox" id="force" name="force" ${sitePublication.force ? 'checked="checked"' : ''}/>
+                                <input type="checkbox" id="force" name="force" ${sitePublication.force ? 'checked="checked"' : ''} onclick="forcePublicationWarn(); return true;"/>
                                 <fmt:message key="siteSettingsPublication.force"/>
                             </label>
                         </div>

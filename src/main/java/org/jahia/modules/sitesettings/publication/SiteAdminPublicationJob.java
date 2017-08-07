@@ -25,6 +25,7 @@ package org.jahia.modules.sitesettings.publication;
 
 import org.apache.commons.lang.StringUtils;
 import org.jahia.api.Constants;
+import org.jahia.modules.sitesettings.publication.util.SiteAdminPublicationUtils;
 import org.jahia.services.content.*;
 import org.quartz.JobDataMap;
 import org.slf4j.Logger;
@@ -75,70 +76,54 @@ public class SiteAdminPublicationJob extends SiteAdminPublicationJobSupport {
 
         // get job data
         final String path = (String) jobDataMap.get(PUBLICATION_JOB_PATH);
-        final String language = (String) jobDataMap.get(PUBLICATION_JOB_LANGUAGE);
+        String language = (String) jobDataMap.get(PUBLICATION_JOB_LANGUAGE);
 
         // check data
         if (StringUtils.isEmpty(path) || StringUtils.isEmpty(language)) {
             throw new IllegalArgumentException("Path and language are mandatory to execute the site admin publication job");
         }
 
-        final JCRPublicationService publicationService = JCRPublicationService.getInstance();
-
-        JCRTemplate.getInstance().doExecuteWithSystemSessionAsUser(null, Constants.EDIT_WORKSPACE, null, new JCRCallback<Object>() {
+        JCRNodeWrapper node = JCRTemplate.getInstance().doExecuteWithSystemSessionAsUser(null, Constants.EDIT_WORKSPACE, null, new JCRCallback<JCRNodeWrapper>() {
 
             @Override
-            public Object doInJCR(JCRSessionWrapper session) throws RepositoryException {
-
-                JCRNodeWrapper node = session.getNode(path);
-                List<PublicationInfo> publicationInfos = publicationService.getPublicationInfo(node.getIdentifier(), Collections.singleton(language), true, true, true, Constants.EDIT_WORKSPACE, Constants.LIVE_WORKSPACE);
-
-                // check for conflict issues and mandatory properties
-                List<PublicationInfoNode> nonPublishableInfos = new LinkedList<>();
-                boolean needPublication = false;
-                for (PublicationInfo publicationInfo : publicationInfos) {
-                    needPublication |= needsPublication(publicationInfo.getRoot(), nonPublishableInfos);
-                }
-                if (!nonPublishableInfos.isEmpty()) {
-                    logger.warn("Site admin publication job for path [{}] and language [{}] has been aborted due to conflicts or missing mandatory properties", path, language);
-                    jobDataMap.put(PUBLICATION_JOB_RESULT, ERROR);
-                    List<String> conflictNodes = new LinkedList<>();
-                    List<String> missingMandatoryPropertyNodes = new LinkedList<>();
-                    for (PublicationInfoNode publicationInfo : nonPublishableInfos) {
-                        if (publicationInfo.getStatus() == PublicationInfo.CONFLICT) {
-                            conflictNodes.add(publicationInfo.getPath());
-                        } else {
-                            missingMandatoryPropertyNodes.add(publicationInfo.getPath());
-                        }
-                    }
-                    jobDataMap.put(PUBLICATION_JOB_CONFLICTS, conflictNodes);
-                    jobDataMap.put(PUBLICATION_JOB_MISSING_PROPERTY, missingMandatoryPropertyNodes);
-                } else if (!needPublication) {
-                    // nothing to publish
-                    logger.info("Site admin publication job for path [{}] and language [{}] finished with nothing to publish", path, language);
-                    jobDataMap.put(PUBLICATION_JOB_RESULT, NOTHING_TO_PUBLISH);
-                } else {
-                    // do the publication
-                    publicationService.publishByMainId(node.getIdentifier(), Constants.EDIT_WORKSPACE, Constants.LIVE_WORKSPACE, Collections.singleton(language), true, Collections.<String>emptyList());
-                    jobDataMap.put(PUBLICATION_JOB_END, Long.toString(System.currentTimeMillis()));
-                    jobDataMap.put(PUBLICATION_JOB_RESULT, SUCCESS);
-                }
-
-                return null;
+            public JCRNodeWrapper doInJCR(JCRSessionWrapper session) throws RepositoryException {
+                return session.getNode(path);
             }
         });
+
+        JCRPublicationService publicationService = JCRPublicationService.getInstance();
+        List<PublicationInfo> publicationInfos = publicationService.getPublicationInfo(node.getIdentifier(), Collections.singleton(language), true, true, true, Constants.EDIT_WORKSPACE, Constants.LIVE_WORKSPACE);
+
+        boolean needPublication = false;
+        List<String> conflictingPaths = new LinkedList<>();
+        List<String> missingMandatoryPropertyPaths = new LinkedList<>();
+        for (PublicationInfo publicationInfo : publicationInfos) {
+            SiteAdminPublicationUtils.PublicationData publicationData = SiteAdminPublicationUtils.getPublicationData(publicationInfo);
+            needPublication |= publicationData.getNeedsPublication();
+            populateNonPublishablePaths(publicationData.getConflictingNodes(), conflictingPaths);
+            populateNonPublishablePaths(publicationData.getMissingMandatoryPropertiesNodes(), missingMandatoryPropertyPaths);
+        }
+
+        if (!conflictingPaths.isEmpty() || !missingMandatoryPropertyPaths.isEmpty()) {
+            logger.warn("Site admin publication job for path [{}] and language [{}] has been aborted due to conflicts or missing mandatory properties", path, language);
+            jobDataMap.put(PUBLICATION_JOB_RESULT, ERROR);
+            jobDataMap.put(PUBLICATION_JOB_CONFLICTS, conflictingPaths);
+            jobDataMap.put(PUBLICATION_JOB_MISSING_PROPERTY, missingMandatoryPropertyPaths);
+        } else if (!needPublication) {
+            // nothing to publish
+            logger.info("Site admin publication job for path [{}] and language [{}] finished with nothing to publish", path, language);
+            jobDataMap.put(PUBLICATION_JOB_RESULT, NOTHING_TO_PUBLISH);
+        } else {
+            // do the publication
+            publicationService.publishByMainId(node.getIdentifier(), Constants.EDIT_WORKSPACE, Constants.LIVE_WORKSPACE, Collections.singleton(language), true, Collections.<String>emptyList());
+            jobDataMap.put(PUBLICATION_JOB_END, Long.toString(System.currentTimeMillis()));
+            jobDataMap.put(PUBLICATION_JOB_RESULT, SUCCESS);
+        }
     }
 
-    private static boolean needsPublication(PublicationInfoNode publicationInfoNode, List<PublicationInfoNode> nonPublishableInfos) {
-        boolean needsPublication = publicationInfoNode.getStatus() != PublicationInfo.PUBLISHED;
-        if (publicationInfoNode.getStatus() == PublicationInfo.CONFLICT || publicationInfoNode.getStatus() == PublicationInfo.MANDATORY_LANGUAGE_UNPUBLISHABLE) {
-            nonPublishableInfos.add(publicationInfoNode);
+    private static void populateNonPublishablePaths(Collection<PublicationInfoNode> nonPublishableNodes, Collection<String> nonPublishablePaths) {
+        for (PublicationInfoNode nonPublishableNode : nonPublishableNodes) {
+            nonPublishablePaths.add(nonPublishableNode.getPath());
         }
-        for (PublicationInfoNode child : publicationInfoNode.getChildren()) {
-            needsPublication |= needsPublication(child, nonPublishableInfos);
-        }
-        for (PublicationInfo reference : publicationInfoNode.getReferences()) {
-            needsPublication |= needsPublication(reference.getRoot(), nonPublishableInfos);
-        }
-        return needsPublication;
     }
 }

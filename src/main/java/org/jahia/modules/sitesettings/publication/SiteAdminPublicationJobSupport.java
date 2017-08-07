@@ -8,6 +8,9 @@ import org.quartz.JobExecutionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Provides for common site admin publication job framework.
+ */
 public abstract class SiteAdminPublicationJobSupport extends BackgroundJob {
 
     /**
@@ -72,8 +75,16 @@ public abstract class SiteAdminPublicationJobSupport extends BackgroundJob {
         }
     }
 
+    /**
+     * Execute essential actions of the job, excluding general exceptions handling and notifications.
+     * @param jobDataMap Job data
+     */
     abstract protected void doExecute(JobDataMap jobDataMap) throws Exception;
 
+    /**
+     * Send notification about job completion, whether it is success or failure.
+     * @param jobDataMap Job data
+     */
     protected void sendNotification(JobDataMap jobDataMap) {
         PublicationResultEmailNotificationService notificationService = (PublicationResultEmailNotificationService) SpringContextSingleton.getBeanInModulesContext("org.jahia.modules.sitesettings.publication.service.PublicationResultEmailNotificationService");
         notificationService.notifyJobCompleted(jobDataMap);

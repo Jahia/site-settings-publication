@@ -25,9 +25,22 @@ import org.quartz.JobDetail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Starts publication of a node via scheduling multiple SiteAdminPublicationJob on per language basis.
+ * <p>
+ * Also, removes live content prior to starting any publication jobs if told to do so via the "force" parameter.
+ * However, this is done only in case any nodes to publish don't miss any mandatory properties, otherwise the job is aborted.
+ */
 public class SiteAdminPublicationStartJob extends SiteAdminPublicationJobSupport {
 
+    /**
+     * Key of the job data containing a list of languages to publish content in.
+     */
     public static final String PUBLICATION_JOB_LANGUAGES = "languages";
+
+    /**
+     * Key of the boolean telling whether live content should be removed before publishing.
+     */
     public static final String PUBLICATION_JOB_FORCE = "force";
 
     private static final Logger logger = LoggerFactory.getLogger(SiteAdminPublicationStartJob.class);
@@ -65,6 +78,11 @@ public class SiteAdminPublicationStartJob extends SiteAdminPublicationJobSupport
 
             if (missingMandatoryPropertiesNodes.isEmpty()) {
 
+                // Remove live content and publish it from scratch only in case there are no missing mandatory properties.
+                // At the same time, we remove live content and re-publish it in case there are any conflicts or content has been fully published before.
+
+                logger.info("Removing live content located at [{}]", path);
+
                 JCRTemplate.getInstance().doExecuteWithSystemSessionAsUser(null, Constants.LIVE_WORKSPACE, null, new JCRCallback<Void>() {
 
                     @Override
@@ -76,12 +94,15 @@ public class SiteAdminPublicationStartJob extends SiteAdminPublicationJobSupport
                 });
 
             } else {
+                // In case there are any missing mandatory properties, neither delete live content nor publish it; just send a notification.
+                logger.warn("Site admin publication job for path [{}] has been aborted due to missing mandatory properties", path);
                 jobDataMap.put(PUBLICATION_JOB_RESULT, ERROR);
                 jobDataMap.put(PUBLICATION_JOB_MISSING_PROPERTY, missingMandatoryPropertiesNodes);
                 return;
             }
         }
 
+        // Schedule multiple SiteAdminPublicationJob, one per language.
         SchedulerService schedulerService = (SchedulerService) SpringContextSingleton.getBean("SchedulerService");
         for (String language : languages) {
             logger.info("Schedulling publication job for node {} in language {}", path, language);
@@ -98,6 +119,7 @@ public class SiteAdminPublicationStartJob extends SiteAdminPublicationJobSupport
 
     @Override
     protected void sendNotification(JobDataMap jobDataMap) {
+        // In case of success, notifications will be sent by SiteAdminPublicationJob instances when they complete.
         String result = jobDataMap.getString(PUBLICATION_JOB_RESULT);
         if (!result.equals(SUCCESS)) {
             super.sendNotification(jobDataMap);

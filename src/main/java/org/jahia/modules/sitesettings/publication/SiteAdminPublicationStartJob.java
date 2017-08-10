@@ -56,18 +56,18 @@ public class SiteAdminPublicationStartJob extends SiteAdminPublicationJobSupport
 
         if (force) {
 
-            JCRNodeWrapper node = JCRTemplate.getInstance().doExecuteWithSystemSessionAsUser(null, Constants.EDIT_WORKSPACE, null, new JCRCallback<JCRNodeWrapper>() {
+            String identifier = JCRTemplate.getInstance().doExecuteWithSystemSessionAsUser(null, Constants.EDIT_WORKSPACE, null, new JCRCallback<String>() {
 
                 @Override
-                public JCRNodeWrapper doInJCR(JCRSessionWrapper session) throws RepositoryException {
-                    return session.getNode(path);
+                public String doInJCR(JCRSessionWrapper session) throws RepositoryException {
+                    return session.getNode(path).getIdentifier();
                 }
             });
 
             JCRPublicationService publicationService = (JCRPublicationService) SpringContextSingleton.getBean("jcrPublicationService");
             LinkedList<String> missingMandatoryPropertiesNodes = new LinkedList<>();
             for (String language : languages) {
-                List<PublicationInfo> publicationInfos = publicationService.getPublicationInfo(node.getIdentifier(), Collections.singleton(language), true, true, true, Constants.EDIT_WORKSPACE, Constants.LIVE_WORKSPACE);
+                List<PublicationInfo> publicationInfos = publicationService.getPublicationInfo(identifier, Collections.singleton(language), true, true, true, Constants.EDIT_WORKSPACE, Constants.LIVE_WORKSPACE);
                 for (PublicationInfo publicationInfo : publicationInfos) {
                     SiteAdminPublicationUtils.PublicationData publicationData = SiteAdminPublicationUtils.getPublicationData(publicationInfo);
                     for (PublicationInfoNode publicationInfoNode : publicationData.getMissingMandatoryPropertiesNodes()) {

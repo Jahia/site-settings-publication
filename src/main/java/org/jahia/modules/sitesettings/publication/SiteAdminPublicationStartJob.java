@@ -56,7 +56,7 @@ public class SiteAdminPublicationStartJob extends SiteAdminPublicationJobSupport
 
         if (force) {
 
-            String identifier = JCRTemplate.getInstance().doExecuteWithSystemSessionAsUser(null, Constants.EDIT_WORKSPACE, null, new JCRCallback<String>() {
+            final String identifier = JCRTemplate.getInstance().doExecuteWithSystemSessionAsUser(null, Constants.EDIT_WORKSPACE, null, new JCRCallback<String>() {
 
                 @Override
                 public String doInJCR(JCRSessionWrapper session) throws RepositoryException {
@@ -87,7 +87,7 @@ public class SiteAdminPublicationStartJob extends SiteAdminPublicationJobSupport
 
                     @Override
                     public Void doInJCR(JCRSessionWrapper session) throws RepositoryException {
-                        session.getNode(path).remove();
+                        session.getNodeByIdentifier(identifier).remove();
                         session.save();
                         return null;
                     }

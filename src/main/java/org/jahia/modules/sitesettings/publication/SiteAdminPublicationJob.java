@@ -83,16 +83,16 @@ public class SiteAdminPublicationJob extends SiteAdminPublicationJobSupport {
             throw new IllegalArgumentException("Path and language are mandatory to execute the site admin publication job");
         }
 
-        JCRNodeWrapper node = JCRTemplate.getInstance().doExecuteWithSystemSessionAsUser(null, Constants.EDIT_WORKSPACE, null, new JCRCallback<JCRNodeWrapper>() {
+        String identifier = JCRTemplate.getInstance().doExecuteWithSystemSessionAsUser(null, Constants.EDIT_WORKSPACE, null, new JCRCallback<String>() {
 
             @Override
-            public JCRNodeWrapper doInJCR(JCRSessionWrapper session) throws RepositoryException {
-                return session.getNode(path);
+            public String doInJCR(JCRSessionWrapper session) throws RepositoryException {
+                return session.getNode(path).getIdentifier();
             }
         });
 
         JCRPublicationService publicationService = JCRPublicationService.getInstance();
-        List<PublicationInfo> publicationInfos = publicationService.getPublicationInfo(node.getIdentifier(), Collections.singleton(language), true, true, true, Constants.EDIT_WORKSPACE, Constants.LIVE_WORKSPACE);
+        List<PublicationInfo> publicationInfos = publicationService.getPublicationInfo(identifier, Collections.singleton(language), true, true, true, Constants.EDIT_WORKSPACE, Constants.LIVE_WORKSPACE);
 
         boolean needPublication = false;
         List<String> conflictingPaths = new LinkedList<>();
@@ -115,7 +115,7 @@ public class SiteAdminPublicationJob extends SiteAdminPublicationJobSupport {
             jobDataMap.put(PUBLICATION_JOB_RESULT, NOTHING_TO_PUBLISH);
         } else {
             // do the publication
-            publicationService.publishByMainId(node.getIdentifier(), Constants.EDIT_WORKSPACE, Constants.LIVE_WORKSPACE, Collections.singleton(language), true, Collections.<String>emptyList());
+            publicationService.publishByMainId(identifier, Constants.EDIT_WORKSPACE, Constants.LIVE_WORKSPACE, Collections.singleton(language), true, Collections.<String>emptyList());
             jobDataMap.put(PUBLICATION_JOB_END, Long.toString(System.currentTimeMillis()));
             jobDataMap.put(PUBLICATION_JOB_RESULT, SUCCESS);
         }

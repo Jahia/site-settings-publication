@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<flow xmlns="http://www.springframework.org/schema/webflow"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://www.springframework.org/schema/webflow
+                          http://www.springframework.org/schema/webflow/spring-webflow-2.0.xsd">
+
+    <var name="flowHandler" class="org.jahia.modules.sitesettings.publication.webflow.SitePublicationFlowHandler"/>
+
+    <on-start>
+        <evaluate expression="flowHandler.initSitePublication(externalContext.requestMap.renderContext)" result="flowScope.sitePublication"/>
+    </on-start>
+
+    <view-state id="view" model="sitePublication">
+        <transition on="publish" to="view">
+            <evaluate expression="flowHandler.startPublication(sitePublication, externalContext.requestMap.renderContext, messageContext)" result="flowScope.sitePublication"/>
+        </transition>
+        <transition on="lastPublications" to="lastPublications">
+            <evaluate expression="flowHandler.getPublicationJobs(externalContext.requestMap.renderContext.site)" result="flowScope.publicationJobs"/>
+        </transition>
+    </view-state>
+
+    <view-state id="lastPublications">
+        <transition on="back" to="view"/>
+    </view-state>
+
+</flow>

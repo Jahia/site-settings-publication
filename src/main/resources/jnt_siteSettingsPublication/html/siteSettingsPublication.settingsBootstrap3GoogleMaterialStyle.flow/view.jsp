@@ -157,7 +157,7 @@
                                         <div class="col-md-6">
                                             <h4><fmt:message key="siteSettingsPublication.scope"/>${mandatoryLabel}</h4>
                                             <div class="radio">
-                                                <label for="scopeSite">
+                                                <label class="radio-inline" for="scopeSite">
                                                     <input type="radio" id="scopeSite" name="scope" value="${ENTIRE_SITE}"
                                                     ${sitePublication.scope
                                                             == ENTIRE_SITE ? 'checked' : ''}/>&nbsp;
@@ -165,14 +165,19 @@
                                                 </label>
                                             </div>
                                             <div class="radio">
-                                                <label for="scopeNode">
+                                                <label class="radio-inline" for="scopeNode">
                                                     <input type="radio" id="scopeNode" name="scope" value="${SITE_SUBNODE}" ${sitePublication.scope == SITE_SUBNODE ? 'checked' : ''}/>&nbsp;
                                                     <fmt:message key="siteSettingsPublication.scope.node"/>:&nbsp;
+                                                </label>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-sm-7 col-sm-offset-1">
                                                     <input type="text" name="nodePath" class="form-control" id="nodePath"
                                                            value="${fn:escapeXml(sitePublication.nodePath)}" ${sitePublication.scope != SITE_SUBNODE ? 'disabled="disabled"' : ''}/>
-                                                    <span class="col-sm-3">&nbsp;</span>
-                                                    (<fmt:message key="siteSettingsPublication.scope.node.hint"><fmt:param value="${sitePublication.currentSiteKey}"/></fmt:message>)
-                                                </label>
+
+                                                    (<fmt:message key="siteSettingsPublication.scope.node.hint"><fmt:param
+                                                        value="${sitePublication.currentSiteKey}"/></fmt:message>)
+                                                </div>
                                             </div>
                                             <br/>
                                         </div>

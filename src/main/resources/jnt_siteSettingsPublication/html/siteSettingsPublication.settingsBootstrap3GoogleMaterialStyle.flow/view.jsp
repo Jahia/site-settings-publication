@@ -148,7 +148,7 @@
                 <div class="row">
                     <div class="col-sm-9 col-md-9">
                         <fmt:message key="label.error.mandatoryField" var="i18nMandatory"/><c:set var="i18nMandatory" value="${fn:escapeXml(i18nMandatory)}"/>
-                        <c:set var="mandatoryLabel">&nbsp;<span class="text-error" title="${i18nMandatory}"><strong>*</strong></span></c:set>
+                        <c:set var="mandatoryLabel">&nbsp;<span class="text-danger" title="${i18nMandatory}"><strong>*</strong></span></c:set>
                         <form action="${flowExecutionUrl}" method="post" id="formSitePublication">
                             <input type="hidden" id="sitePubAction" name="_eventId" value="" />
                             <fieldset>

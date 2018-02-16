@@ -233,12 +233,10 @@
                                                    onclick="$('#detail${count}').modal('toggle')"
                                                     role="button"
                                                     data-placement="bottom"
-                                                    title data-original-title="<fmt:message key="siteSettingsPublication.publicationJobs.details"/>"
+                                                    title data-original-title="<fmt:message key="siteSettingsPublication.publicationJobs.showDetails"/>"
                                                     class="btn btn-fab btn-info"
                                                     data-toggle="tooltip">
                                                     <i class="material-icons">info_outline</i>
-                                                    <%--<fmt:message
-                                                        key="siteSettingsPublication.publicationJobs.showDetails" />--%>
                                                 </a>
                                                 <c:set var="count"
                                                     value="${count + 1}" />

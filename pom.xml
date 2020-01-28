@@ -50,7 +50,7 @@
     <parent>
         <groupId>org.jahia.modules</groupId>
         <artifactId>jahia-modules</artifactId>
-        <version>7.2.1.0</version>
+        <version>7.5.0.0-SNAPSHOT</version>
         <relativePath />
     </parent>
     <artifactId>site-settings-publication</artifactId>
@@ -67,6 +67,7 @@
 
     <properties>
         <jahia-depends>default,siteSettings</jahia-depends>
+        <jahia-module-signature>MCwCFHyv0rvAa/cqAIcVB9jjGVALUA1XAhRt14jo1gtedWY4KEKwH19ZCXnxgQ==</jahia-module-signature>
     </properties>
 
     <repositories>

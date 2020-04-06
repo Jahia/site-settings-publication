@@ -2,6 +2,7 @@ window.jahia.i18n.loadNamespaces('site-settings-publication');
 
 window.jahia.uiExtender.registry.add('adminRoute', 'sitepublication', {
     targets: ['jcontent:40'],
+    icon: window.jahia.moonstone.toIconComponent('SiteSettingsPublication'),
     label: 'site-settings-publication:label.title',
     isSelectable: true,
     requiredPermission: 'siteAdminPublication',

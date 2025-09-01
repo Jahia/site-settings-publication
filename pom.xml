@@ -67,7 +67,7 @@
 
     <properties>
         <jahia-depends>default,siteSettings</jahia-depends>
-        <jahia-module-signature>MCwCFF02p5x6rdM1WDU10zVtBDhD+tklAhR2eEyRVb50uC+2Cvj9d4tFQoHSRw==</jahia-module-signature>
+        <jahia-module-signature>MCwCFBtRi92akvXBPnx+CM/w+8cEA8YBAhQFhp+PT2BhBfdq+7G7ZMRrfhigBA==</jahia-module-signature>
         <require-capability>osgi.extender;filter:="(osgi.extender=org.jahia.bundles.blueprint.extender.config)"</require-capability>
         <import-package>org.springframework.web.servlet.tags</import-package>
     </properties>

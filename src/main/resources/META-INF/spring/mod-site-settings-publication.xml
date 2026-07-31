@@ -11,14 +11,4 @@
         <property name="emailTemplate" value="${siteSettingsPublication.mail.template:META-INF/mail/notification.vm}"/>
     </bean>
 
-    <!-- The site publication screen is a site-scoped settings component: its legitimate caller is a site
-         administrator, whose role is granted on the site, so the check is evaluated on the render's main
-         resource rather than on the component node (which lives under /modules and where they hold nothing). -->
-    <bean id="settingsComponentPermissionFilter" class="org.jahia.modules.sitesettings.publication.SettingsComponentPermissionFilter">
-        <property name="priority" value="22"/>
-        <property name="description"
-                  value="Renders a settings component only for a caller holding an administration permission on the main resource"/>
-        <property name="applyOnNodeTypes" value="jnt:siteSettingsPublication"/>
-        <property name="requiredPermissions" value="site-admin,admin"/>
-    </bean>
 </beans>

@@ -135,8 +135,8 @@
                                             value="${dateValue}"
                                             pattern="MM/dd/yyyy HH:mm:ss" />
                                     </c:if></td>
-                                <td>${jobDetail['path']}</td>
-                                <td>${jobDetail['language']}</td>
+                                <td>${fn:escapeXml(jobDetail['path'])}</td>
+                                <td>${fn:escapeXml(jobDetail['language'])}</td>
                                 <td><c:choose>
                                         <c:when
                                             test="${jobDetail['result'] == null}">
@@ -176,13 +176,13 @@
                                                         <fmt:message
                                                             key="siteSettingsPublication.publicationJobs.publicationPath">
                                                             <fmt:param
-                                                                value="<strong>${jobDetail['path']}</strong>" />
+                                                                value="<strong>${fn:escapeXml(jobDetail['path'])}</strong>" />
                                                         </fmt:message>
                                                     </p>
                                                     <p>
                                                         <fmt:message
                                                             key="siteSettingsPublication.publicationJobs.language" />
-                                                        : <strong>${jobDetail['language']}</strong>
+                                                        : <strong>${fn:escapeXml(jobDetail['language'])}</strong>
                                                     </p>
                                                     <p>
                                                         <fmt:message
@@ -198,7 +198,7 @@
                                                             <c:forEach
                                                                 items="${jobDetail['conflict']}"
                                                                 var="item">
-                                                                <li>${item}</li>
+                                                                <li>${fn:escapeXml(item)}</li>
                                                             </c:forEach>
                                                         </ul>
                                                         </p>
@@ -212,7 +212,7 @@
                                                             <c:forEach
                                                                 items="${jobDetail['missingProperty']}"
                                                                 var="item">
-                                                                <li>${item}</li>
+                                                                <li>${fn:escapeXml(item)}</li>
                                                             </c:forEach>
                                                         </ul>
                                                         </p>

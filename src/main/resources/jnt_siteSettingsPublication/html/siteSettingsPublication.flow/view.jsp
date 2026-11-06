@@ -28,8 +28,8 @@
 <fmt:message var="i18nCancel" key="label.cancel"/>
 <fmt:message var="i18nPublish" key="label.publish"/>
 <fmt:message var="i18nConfirmSite" key="siteSettingsPublication.confirm.site">
-    <fmt:param value="${sitePublication.currentSiteName}"/>
-    <fmt:param value="${sitePublication.currentSiteKey}"/>
+    <fmt:param value="${fn:escapeXml(sitePublication.currentSiteName)}"/>
+    <fmt:param value="${fn:escapeXml(sitePublication.currentSiteKey)}"/>
 </fmt:message>
 <fmt:message var="i18nConfirmNode" key="siteSettingsPublication.confirm.node"/>
 <fmt:message var="i18nConfirmBackground" key="siteSettingsPublication.confirm.background"/>

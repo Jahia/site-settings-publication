@@ -48,12 +48,13 @@ export const sitePublication = {
 const ACTIVE_JOB = ['ADDED', 'SCHEDULED', 'EXECUTING']
 
 // The module runs one SiteAdminPublicationJob per language, and each one publishes in its own run.
+// The jobs are matched by group: their data holds the site UUID, so the siteKey of the query stays empty.
 export const waitForSitePublicationJobs = () => {
     cy.waitUntil(
         () =>
             cy
                 .apolloClient()
-                .apollo({ queryFile: 'graphql/siteAdminPublicationJobs.graphql', fetchPolicy: 'no-cache' })
+                .apollo({ queryFile: 'graphql/jcr/query/getJobsWithStatus.graphql', fetchPolicy: 'no-cache' })
                 .then((response) => {
                     const jobs = response?.data?.admin?.jahia?.scheduler?.jobs ?? []
                     return !jobs.some(

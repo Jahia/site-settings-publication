@@ -65,13 +65,13 @@ if [[ -d provisioning/ ]]; then
 fi
 
 echo "$(date +'%d %B %Y - %k:%M') == Executing manifest: ${MANIFEST} =="
-curl -u root:${SUPER_USER_PASSWORD} -X POST ${JAHIA_URL}/modules/api/provisioning --form script="@./run-artifacts/${MANIFEST};type=text/yaml"
-echo
-if [[ $? -eq 1 ]]; then
-  echo "PROVISIONING FAILURE - EXITING SCRIPT, NOT RUNNING THE TESTS"
+if ! curl --fail -u root:${SUPER_USER_PASSWORD} -X POST ${JAHIA_URL}/modules/api/provisioning --form script="@./run-artifacts/${MANIFEST};type=text/yaml"; then
+  echo
+  echo "PROVISIONING FAILURE - EXITING SCRIPT, NOT RUNNING THE TESTS" >&2
   echo "failure" > ./results/test_failure
   exit 1
 fi
+echo
 
 if [[ -d artifacts/ && $MANIFEST == *"build"* ]]; then
   # If we're building the module (and manifest name contains build), then we'll end up pushing that module individually
@@ -97,7 +97,7 @@ echo "$(date +'%d %B %Y - %k:%M') == Fetching the list of installed modules =="
   --jahiaPassword="${SUPER_USER_PASSWORD}" \
   --filepath="results/installed-jahia-modules.json"
 echo "$(date +'%d %B %Y - %k:%M') == Modules fetched =="
-INSTALLED_MODULE_VERSION=$(cat results/installed-jahia-modules.json | jq '.module.version')
+INSTALLED_MODULE_VERSION=$(cat results/installed-jahia-modules.json | jq -r '.module.version')
 if [[ $INSTALLED_MODULE_VERSION == "UNKNOWN" ]]; then
   echo "$(date +'%d %B %Y - %k:%M') ERROR: Unable to detect module: ${MODULE_ID} on the remote system " >&2
   echo "$(date +'%d %B %Y - %k:%M') ERROR: The Script will exit" >&2

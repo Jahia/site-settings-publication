@@ -46,9 +46,13 @@ describe('Site publication from jContent', () => {
         sitePublication.selectLanguage('fr')
     }
 
-    const confirmPublication = () => {
+    const startPublication = () => {
         sitePublication.publishButton().should('be.enabled').click()
         sitePublication.confirmPublish().click()
+    }
+
+    const confirmPublication = () => {
+        startPublication()
         sitePublication
             .successAlert()
             .should('be.visible')
@@ -120,6 +124,10 @@ describe('Site publication from jContent', () => {
                 .should('be.visible')
                 .and('contain.text', 'Show last publication status')
             sitePublication.publishButton().should('be.disabled')
+            // A language without a scope keeps Publish disabled.
+            sitePublication.selectLanguage('fr')
+            sitePublication.publishButton().should('be.disabled')
+            sitePublication.language('fr').uncheck({ force: true })
             sitePublication.selectNodeScope()
             sitePublication.nodePath().should('be.enabled').clear().type(pagePath)
             sitePublication.publishButton().should('be.disabled')
@@ -155,16 +163,27 @@ describe('Site publication from jContent', () => {
             sitePublication.language('fr').should('be.checked')
         })
 
-        it('FT-006: starts the publication as a background job', () => {
-            context.tag('site-publication', 'publish-started', 'testrail-case-12874')
-            openScreen()
-            fillNodeScopeInFrench()
-            confirmPublication()
-        })
-
         describe('once the French publication of the page has finished', () => {
+            let startedAlert = ''
+
             before(() => {
+                openAsSiteAdmin()
+                openScreen()
+                fillNodeScopeInFrench()
+                startPublication()
+                sitePublication
+                    .successAlert()
+                    .should('be.visible')
+                    .invoke('text')
+                    .then((text) => {
+                        startedAlert = text
+                    })
                 waitForSitePublicationJobs()
+            })
+
+            it('FT-006: starts the publication as a background job', () => {
+                context.tag('site-publication', 'publish-started', 'testrail-case-12874')
+                expect(startedAlert).to.contain('The publication has been started as a background job.')
             })
 
             it('FT-007: lists the finished job with its path, language and status', () => {

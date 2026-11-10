@@ -99,9 +99,9 @@ echo "$(date +'%d %B %Y - %k:%M') == Fetching the list of installed modules =="
 echo "$(date +'%d %B %Y - %k:%M') == Modules fetched =="
 INSTALLED_MODULE_VERSION=$(cat results/installed-jahia-modules.json | jq '.module.version')
 if [[ $INSTALLED_MODULE_VERSION == "UNKNOWN" ]]; then
-  echo "$(date +'%d %B %Y - %k:%M') ERROR: Unable to detect module: ${MODULE_ID} on the remote system "
-  echo "$(date +'%d %B %Y - %k:%M') ERROR: The Script will exit"
-  echo "$(date +'%d %B %Y - %k:%M') ERROR: Tests will NOT run"
+  echo "$(date +'%d %B %Y - %k:%M') ERROR: Unable to detect module: ${MODULE_ID} on the remote system " >&2
+  echo "$(date +'%d %B %Y - %k:%M') ERROR: The Script will exit" >&2
+  echo "$(date +'%d %B %Y - %k:%M') ERROR: Tests will NOT run" >&2
   echo "failure" > ./results/test_failure
   exit 1
 fi

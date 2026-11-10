@@ -9,7 +9,7 @@ source ./set-env.sh
 # It assumes that you previously built the module you're going to be testing
 #   and that the modules artifacts are located one level up
 
-if [ ! -d ./artifacts ]; then
+if [[ ! -d ./artifacts ]]; then
   mkdir -p ./artifacts
 fi
 

@@ -1,0 +1,10 @@
+instrumented/
+.nyc_output
+cypress/videos
+results/
+coverage
+node_modules
+run-artifacts
+.env
+artifacts
+build-dependencies

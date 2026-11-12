@@ -25,7 +25,9 @@ jobs:
       - uses: actions/checkout@v3
       - uses: Jahia/jahia-modules-action/static-analysis@v2
         with:
-          node_version: 12
+          # @jahia/cypress 8.x pulls @faker-js/faker 10, which needs node >= 20.19.
+          # 22 is what tests/Dockerfile runs Cypress on.
+          node_version: 22
           auditci_level: critical
 
   build:
@@ -56,3 +58,19 @@ jobs:
           github_pr_id: ${{github.event.number}}
           sonar_url: ${{ secrets.SONAR_URL }}
           sonar_token: ${{ secrets.SONAR_TOKEN }}
+
+  integration-tests:
+    name: Integration Tests
+    needs: build
+    secrets: inherit
+    uses: Jahia/jahia-modules-action/.github/workflows/reusable-integration-tests.yml@v2
+    with:
+      module_id: site-settings-publication
+      provisioning_manifest: provisioning-manifest-build.yml
+      jahia_image: ghcr.io/jahia/jahia-ee-dev:8-SNAPSHOT
+      should_use_build_artifacts: true
+      should_skip_testrail: true
+      artifact_prefix: site-settings-publication
+      testrail_project: Site Settings Publication
+      timeout_job: 45
+      module_branch: ${{ github.ref }}

@@ -1,0 +1,13 @@
+query userGroupMembership($username: String!) {
+    admin {
+        userAdmin {
+            user(username: $username) {
+                groupMembership {
+                    nodes {
+                        name
+                    }
+                }
+            }
+        }
+    }
+}

@@ -56,7 +56,11 @@ export const waitForSitePublicationJobs = () => {
                 .apolloClient()
                 .apollo({ queryFile: 'graphql/jcr/query/getJobsWithStatus.graphql', fetchPolicy: 'no-cache' })
                 .then((response) => {
-                    const jobs = response?.data?.admin?.jahia?.scheduler?.jobs ?? []
+                    // cy.apollo returns a failed query instead of failing, so keep polling until it succeeds.
+                    const jobs = response?.data?.admin?.jahia?.scheduler?.jobs
+                    if (!jobs) {
+                        return false
+                    }
                     return !jobs.some(
                         (job) =>
                             ['SiteAdminPublicationJob', 'PublicationJob'].includes(job.group) &&

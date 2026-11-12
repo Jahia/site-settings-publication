@@ -222,11 +222,14 @@ describe('Site publication from jContent', () => {
                 sitePublication.showLastPublicationsButton().click()
                 // One row for the French publication of the page, then one row per site language.
                 sitePublication.historyRows().should('have.length', 1 + languages.length)
+                sitePublication.historyRows().each((row) => {
+                    cy.wrap(row).find('td').eq(4).should('contain.text', 'Successful')
+                })
             })
 
-            it('FT-010: makes the page live in the default language', () => {
+            it('FT-010: makes the page live in every site language', () => {
                 context.tag('site-publication', 'live-all-languages', 'testrail-case-12874')
-                liveStatus('en', pagePath).should('eq', 200)
+                languages.forEach((language) => liveStatus(language, pagePath).should('eq', 200))
             })
         })
     })

@@ -9,6 +9,7 @@ import {
     grantRoles,
     jfaker,
     publishAndWaitJobEnding,
+    setNodeProperty,
 } from '@jahia/cypress'
 import {
     liveStatus,
@@ -67,6 +68,9 @@ describe('Site publication from jContent', () => {
             locale: 'en',
             languages: languages.join(','),
         })
+        // createSite titles the home page in the default language only, and jcr:title of a page is mandatory
+        // in every language: without it, the module refuses to publish the site in the other languages.
+        languages.forEach((language) => setNodeProperty(`/sites/${siteKey}/home`, 'jcr:title', 'Home', language))
         // Publish the site once, so the page created next is the only content left unpublished.
         publishAndWaitJobEnding(`/sites/${siteKey}`, languages)
         addNode({

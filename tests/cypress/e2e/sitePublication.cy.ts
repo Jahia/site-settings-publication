@@ -9,6 +9,7 @@ import {
     grantRoles,
     jfaker,
     publishAndWaitJobEnding,
+    setNodeProperty,
 } from '@jahia/cypress'
 import {
     liveStatus,
@@ -67,6 +68,9 @@ describe('Site publication from jContent', () => {
             locale: 'en',
             languages: languages.join(','),
         })
+        // createSite titles the home page in the default language only, and jcr:title of a page is mandatory
+        // in every language: without it, the module refuses to publish the site in the other languages.
+        languages.forEach((language) => setNodeProperty(`/sites/${siteKey}/home`, 'jcr:title', 'Home', language))
         // Publish the site once, so the page created next is the only content left unpublished.
         publishAndWaitJobEnding(`/sites/${siteKey}`, languages)
         addNode({
@@ -222,8 +226,16 @@ describe('Site publication from jContent', () => {
                 sitePublication.showLastPublicationsButton().click()
                 // One row for the French publication of the page, then one row per site language.
                 sitePublication.historyRows().should('have.length', 1 + languages.length)
+                // The French publication of the page already sent everything French, so the site job in French
+                // finds nothing left to publish.
                 sitePublication.historyRows().each((row) => {
-                    cy.wrap(row).find('td').eq(4).should('contain.text', 'Successful')
+                    const path = row.find('td').eq(2).text().trim()
+                    const language = row.find('td').eq(3).text().trim()
+                    const siteJobInFrench = path === `/sites/${siteKey}` && language === 'fr'
+                    cy.wrap(row)
+                        .find('td')
+                        .eq(4)
+                        .should('contain.text', siteJobInFrench ? 'Nothing to publish' : 'Successful')
                 })
             })
 

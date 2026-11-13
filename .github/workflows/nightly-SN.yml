@@ -1,0 +1,52 @@
+# Builds the module from its branch and runs the Cypress suite on the latest Jahia snapshot, every night
+name: Nightly - SN
+
+on:
+  schedule:
+    - cron: "0 3 * * *"
+  workflow_dispatch:
+    inputs:
+      JAHIA_IMAGE:
+        description: 'Jahia image to test (leave empty to test ghcr.io/jahia/jahia-ee-dev:8-SNAPSHOT)'
+        required: false
+        type: string
+
+env:
+  MODULE_ID: "site-settings-publication"
+
+jobs:
+  build:
+    name: Build Module
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/jahia/jahia-docker-mvn-cache:8-jdk-noble-mvn-loaded
+      credentials:
+        username: ${{ secrets.GH_PACKAGES_USERNAME }}
+        password: ${{ secrets.GH_PACKAGES_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: jahia/jahia-modules-action/build@v2
+        with:
+          nexus_username: ${{ secrets.NEXUS_USERNAME }}
+          nexus_password: ${{ secrets.NEXUS_PASSWORD }}
+          module_id: ${{ env.MODULE_ID }}
+          mvn_settings_filepath: '.github/maven.settings.xml'
+
+  integration-tests:
+    name: Integration Tests
+    needs: build
+    secrets: inherit
+    uses: Jahia/jahia-modules-action/.github/workflows/reusable-integration-tests.yml@v2
+    with:
+      module_id: site-settings-publication
+      module_branch: ${{ github.ref }}
+      jahia_image: ${{ inputs.JAHIA_IMAGE || 'ghcr.io/jahia/jahia-ee-dev:8-SNAPSHOT' }}
+      provisioning_manifest: provisioning-manifest-build.yml
+      should_use_build_artifacts: true
+      artifact_prefix: site-settings-publication-nightly-sn-${{ github.run_number }}
+      incident_service: site-settings-publication-sn
+      # Only the scheduled run alerts; a run started by hand, on any branch, does not. The
+      # deprecated input, because the reusable workflow never reads skip_notifications.
+      pagerduty_skip_notification: ${{ github.event_name != 'schedule' }}
+      testrail_project: Site Settings Publication
+      timeout_job: 45

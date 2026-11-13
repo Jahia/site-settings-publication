@@ -49,5 +49,4 @@ jobs:
       # deprecated input, because the reusable workflow never reads skip_notifications.
       pagerduty_skip_notification: ${{ github.event_name != 'schedule' }}
       testrail_project: Site Settings Publication
-      should_skip_testrail: true
       timeout_job: 45

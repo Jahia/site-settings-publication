@@ -101,7 +101,7 @@ describe('Site publication from jContent', () => {
     it('FT-001: hides the Site publication entry while the module is not enabled on the site', () => {
         context.tag('site-publication', 'menu-hidden', 'testrail-case-12874')
         openAsSiteAdmin()
-        sitePublication.tagManagerEntry().should('be.visible')
+        sitePublication.selectedEntry().should('be.visible')
         sitePublication.entry().should('not.exist')
     })
 

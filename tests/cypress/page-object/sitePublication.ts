@@ -19,8 +19,12 @@ export const sitePublication = {
                 expect(events, 'the handlers of the scope input').to.have.property('change')
             }),
     entry: () => cy.get('[data-sel-role="sitepublication"]'),
-    // A built-in entry of the same jContent accordion: it proves the accordion has rendered.
-    tagManagerEntry: () => cy.get('[data-sel-role="jctagsmanager"]', { timeout: 30000 }),
+    // The entry jContent selected on its redirect to /apps/<key>: the tree renders once an entry is selected,
+    // so this proves the accordion has rendered without naming an entry that one jContent version lacks.
+    selectedEntry: () =>
+        cy
+            .location('pathname')
+            .then((pathname) => cy.get(`[data-sel-role="${pathname.split('/apps/')[1]}"]`, { timeout: 30000 })),
     title: () => frame().find('h2'),
     showLastPublicationsButton: () => frame().find('button[name="showLastPublicationsButton"]'),
     publishButton: () => frame().find('#btnSitePublicationPublish'),
